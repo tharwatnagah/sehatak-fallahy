@@ -27,42 +27,40 @@ button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 [hidden]{display:none!important}
 
-/* صفحة تسجيل الدخول */
+/* =========================
+   واجهة تسجيل الدخول
+   ========================= */
+
 .login-wrap{
   min-height:100vh;
+  min-height:100dvh;
   display:grid;
   place-items:center;
-  padding:22px;
+  padding:24px 16px;
   background:
-    radial-gradient(ellipse at 50% 12%,#c5e9c6 0%,transparent 48%),
-    linear-gradient(145deg,#e4f2dc,#f8edc9);
+    linear-gradient(rgba(0,55,33,.10),rgba(0,55,33,.08)),
+    url("login-background.png.png") center center / cover no-repeat;
 }
 
 .login-card{
   width:min(100%,420px);
-  min-height:720px;
-  background:#fff;
-  border:7px solid #202d2a;
-  border-radius:42px;
-  padding:0 22px 22px;
-  box-shadow:0 0 0 3px #d9e2dc,0 20px 60px #003e292c;
+  min-height:0;
+  background:rgba(255,255,255,.95);
+  border:1px solid rgba(255,255,255,.85);
+  border-radius:26px;
+  padding:30px 24px 20px;
+  box-shadow:0 18px 55px rgba(0,45,27,.25);
   position:relative;
   overflow:hidden;
   display:flex;
   flex-direction:column;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
 
-/* رأس أخضر منفصل حتى لا يغطي النص */
+/* إلغاء الرأس الأخضر القديم */
 .login-card::before{
-  content:"";
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  height:235px;
-  background:linear-gradient(135deg,#00603d 0%,#00804b 100%);
-  border-radius:0 0 50% 50% / 0 0 9% 9%;
-  z-index:0;
+  display:none;
 }
 
 .brand-logo,
@@ -75,43 +73,47 @@ button{cursor:pointer}
   z-index:1;
 }
 
+/* عرض اللوجو الأصلي كما رفعته */
 .brand-logo{
   align-self:center;
-  border:3px solid var(--gold);
-  border-radius:30px;
-  padding:7px 18px;
-  color:#fff;
-  font-size:25px;
-  font-weight:800;
-  line-height:1.5;
-  text-shadow:0 2px 3px #003a24;
-  box-shadow:inset 0 0 0 2px #fff5;
-  margin:32px auto 0;
-  background:#006b43;
+  width:min(100%,285px);
+  height:100px;
+  flex-shrink:0;
+  padding:0;
+  margin:0 auto;
+  border:0;
+  border-radius:0;
+  background:url("logo.png.jpeg") center center / contain no-repeat;
+  box-shadow:none;
+  font-size:0;
+  line-height:0;
+  text-shadow:none;
+  position:relative;
+}
+
+.brand-logo span{
+  display:block;
+  font-size:0;
 }
 
 .brand-logo::before{
-  content:'';
-  position:absolute;
-  inset:4px;
-  border:1px solid #f8e95b;
-  border-radius:25px;
-  pointer-events:none;
+  display:none;
 }
 
+/* الشعار أسفل اللوجو */
 .slogan{
-  color:#fff;
+  color:#075b39;
   text-align:center;
-  font-size:18px;
+  font-size:19px;
   font-weight:800;
   line-height:1.8;
-  margin:18px 0 32px;
-  text-shadow:0 2px 5px #003a24;
+  margin:8px 0 24px;
+  text-shadow:none;
 }
 
 .login-card form{
   display:grid;
-  gap:12px;
+  gap:13px;
 }
 
 .field{
@@ -119,12 +121,13 @@ button{cursor:pointer}
   align-items:center;
   gap:10px;
   background:#fff;
-  border:1px solid #d9dfdb;
-  border-radius:13px;
+  border:1px solid #d9e5de;
+  border-radius:12px;
   padding:0 13px;
-  min-height:49px;
+  min-height:51px;
   color:#71877e;
   box-shadow:0 3px 10px #003c2708;
+  transition:border-color .2s,box-shadow .2s;
 }
 
 .field:focus-within{
@@ -137,23 +140,25 @@ button{cursor:pointer}
   outline:0;
   width:100%;
   min-width:0;
-  padding:12px 0;
+  padding:13px 0;
   color:#244a3d;
   background:transparent;
 }
 
-.field input::placeholder{color:#8b9b94}
+.field input::placeholder{
+  color:#8b9b94;
+}
 
 .btn{
   border:0;
-  border-radius:13px;
+  border-radius:12px;
   padding:12px 16px;
   font-weight:800;
 }
 
 .primary{
-  background:linear-gradient(90deg,#00834f,#005b39);
-  color:white;
+  background:linear-gradient(135deg,#07864d,#005b39);
+  color:#fff;
   box-shadow:0 3px 0 #004b30;
 }
 
@@ -161,77 +166,43 @@ button{cursor:pointer}
   display:flex;
   align-items:center;
   justify-content:space-between;
+  min-height:50px;
 }
 
-.full{width:100%;margin-top:9px}
+.btn.primary:hover{
+  filter:brightness(1.06);
+}
+
+.full{
+  width:100%;
+  margin-top:9px;
+}
 
 .login-help{
   text-align:center;
   color:#4d7968;
   font-size:12px;
+  line-height:1.8;
   margin:18px 0 8px;
 }
 
-/* المنظر الزراعي */
+/* إخفاء الرسم القديم لأن الخلفية أصبحت صورة */
 .landscape{
-  height:170px;
-  flex-shrink:0;
-  position:relative;
-  margin:12px -22px 0;
-  overflow:hidden;
-  background:linear-gradient(
-    #ffdf85 0%,
-    #f8eab5 44%,
-    #8ac05c 45%,
-    #347b37 100%
-  );
-}
-
-.sun{
-  position:absolute;
-  top:16px;
-  right:70px;
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  background:#fff7c7;
-  box-shadow:0 0 35px 20px #fff5a9;
-}
-
-.fields{
-  position:absolute;
-  bottom:-50px;
-  left:-5%;
-  width:110%;
-  height:125px;
-  background:repeating-linear-gradient(
-    170deg,
-    #1c6b2f 0 12px,
-    #3f9639 13px 24px,
-    #b0d85a 25px 28px
-  );
-  border-radius:50% 50% 0 0;
-  transform:rotate(-3deg);
-}
-
-.farm{
-  position:absolute;
-  bottom:42px;
-  left:22%;
-  font-size:45px;
-  color:#f8e9b8;
-  text-shadow:0 3px 2px #375b24;
+  display:none;
 }
 
 .footer-login{
   color:#07563a;
   text-align:center;
-  margin-top:auto;
+  margin-top:18px;
   font-size:12px;
-  padding-top:14px;
+  padding-top:8px;
 }
 
-/* الشريط العلوي */
+/* =========================
+   الشريط العلوي
+   ========================= */
+
 .topbar{
   min-height:70px;
   background:var(--deep);
@@ -264,6 +235,10 @@ button{cursor:pointer}
   display:flex;
   min-height:calc(100vh - 70px);
 }
+
+/* =========================
+   القائمة الجانبية
+   ========================= */
 
 .sidebar{
   width:260px;
@@ -306,7 +281,12 @@ button{cursor:pointer}
 }
 
 .profile strong{font-size:15px}
-.profile span,.profile small{font-size:12px;color:#e1f1e9}
+
+.profile span,
+.profile small{
+  font-size:12px;
+  color:#e1f1e9;
+}
 
 .sidebar nav{
   display:grid;
@@ -328,7 +308,8 @@ button{cursor:pointer}
   font-weight:700;
 }
 
-.nav-item.active,.nav-item:hover{
+.nav-item.active,
+.nav-item:hover{
   background:#e4f5eb;
   color:#00643f;
 }
@@ -345,7 +326,10 @@ button{cursor:pointer}
   font-weight:700;
 }
 
-/* محتوى الصفحات */
+/* =========================
+   محتوى الصفحات
+   ========================= */
+
 .main{
   flex:1;
   min-width:0;
@@ -356,8 +340,18 @@ button{cursor:pointer}
 }
 
 .page-heading{margin-bottom:22px}
-.page-heading h1{font-size:26px;margin:0 0 3px;color:#124c3a}
-.page-heading p{margin:0;color:var(--muted);font-size:14px}
+
+.page-heading h1{
+  font-size:26px;
+  margin:0 0 3px;
+  color:#124c3a;
+}
+
+.page-heading p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
 
 .welcome-card{
   background:linear-gradient(110deg,#00633f,#07804d);
@@ -370,7 +364,11 @@ button{cursor:pointer}
   box-shadow:var(--shadow);
 }
 
-.welcome-card h2{margin:0 0 7px;font-size:23px}
+.welcome-card h2{
+  margin:0 0 7px;
+  font-size:23px;
+}
+
 .welcome-card p{margin:0 0 5px}
 .welcome-card small{color:#d6eee2}
 
@@ -395,7 +393,7 @@ button{cursor:pointer}
 
 .quick.green{
   background:linear-gradient(145deg,#168448,#00633d);
-  color:white;
+  color:#fff;
 }
 
 .round-icon{
@@ -409,8 +407,16 @@ button{cursor:pointer}
   font-size:25px;
 }
 
-.quick.green .round-icon{background:#fff;color:#00633f}
-.quick small{font-size:12px;color:inherit;opacity:.85}
+.quick.green .round-icon{
+  background:#fff;
+  color:#00633f;
+}
+
+.quick small{
+  font-size:12px;
+  color:inherit;
+  opacity:.85;
+}
 
 .stats-grid{
   display:grid;
@@ -419,9 +425,12 @@ button{cursor:pointer}
   margin:14px 0 28px;
 }
 
-.admin-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+.admin-stats{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
 
-.stat,.panel{
+.stat,
+.panel{
   background:#fff;
   border:1px solid var(--line);
   border-radius:16px;
@@ -429,10 +438,30 @@ button{cursor:pointer}
   box-shadow:var(--shadow);
 }
 
-.stat{display:flex;flex-direction:column;gap:4px}
-.stat span{font-size:13px;color:#52796b}
-.stat b{font-size:28px;color:#00643f}
-.stat small{font-size:11px;color:#7b948a}
+.stat{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.stat span{
+  font-size:13px;
+  color:#52796b;
+}
+
+.stat b{
+  font-size:28px;
+  color:#00643f;
+}
+
+.stat small{
+  font-size:11px;
+  color:#7b948a;
+}
+
+/* =========================
+   النماذج والحقول
+   ========================= */
 
 .form-panel{
   display:grid;
@@ -440,7 +469,10 @@ button{cursor:pointer}
   margin-bottom:25px;
 }
 
-.form-panel h3{margin:2px 0;color:#15543f}
+.form-panel h3{
+  margin:2px 0;
+  color:#15543f;
+}
 
 .form-panel label{
   display:grid;
@@ -464,7 +496,10 @@ button{cursor:pointer}
   outline-color:#74b89a;
 }
 
-.form-panel textarea{min-height:85px;resize:vertical}
+.form-panel textarea{
+  min-height:85px;
+  resize:vertical;
+}
 
 .form-grid{
   display:grid;
@@ -488,9 +523,18 @@ button{cursor:pointer}
   font-weight:700;
 }
 
-.list{display:grid;gap:10px;margin:15px 0 25px}
+/* =========================
+   القوائم والشكاوى
+   ========================= */
 
-.list-row,.complaint-row{
+.list{
+  display:grid;
+  gap:10px;
+  margin:15px 0 25px;
+}
+
+.list-row,
+.complaint-row{
   background:#fff;
   border:1px solid var(--line);
   border-radius:13px;
@@ -501,7 +545,9 @@ button{cursor:pointer}
 }
 
 .list-row>div:not(.avatar){min-width:0}
-.list-row small,.complaint-main small{
+
+.list-row small,
+.complaint-main small{
   display:block;
   color:#719084;
   font-size:12px;
@@ -522,10 +568,27 @@ button{cursor:pointer}
 .review{background:#fff0c9;color:#a76a00}
 .rejected{background:#ffe0e0;color:#b82c2c}
 
-.complaint-row{align-items:flex-start;flex-wrap:wrap}
-.complaint-main{flex:1;min-width:200px}
-.complaint-main p{margin:9px 0 0;font-size:13px;white-space:pre-wrap}
-.complaint-row select{width:auto;max-width:160px;padding:7px}
+.complaint-row{
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+
+.complaint-main{
+  flex:1;
+  min-width:200px;
+}
+
+.complaint-main p{
+  margin:9px 0 0;
+  font-size:13px;
+  white-space:pre-wrap;
+}
+
+.complaint-row select{
+  width:auto;
+  max-width:160px;
+  padding:7px;
+}
 
 .empty{
   background:#fff;
@@ -537,7 +600,15 @@ button{cursor:pointer}
 }
 
 .search-input{margin-bottom:12px}
-.hint{font-size:12px;color:#718c80}
+
+.hint{
+  font-size:12px;
+  color:#718c80;
+}
+
+/* =========================
+   التنبيهات والتذييل
+   ========================= */
 
 .toast{
   position:fixed;
@@ -563,7 +634,10 @@ footer{
   padding:28px 0 6px;
 }
 
-/* توافق الموبايل */
+/* =========================
+   توافق الأجهزة اللوحية
+   ========================= */
+
 @media(max-width:850px){
   .sidebar{
     position:fixed;
@@ -577,34 +651,75 @@ footer{
   }
 
   .sidebar.open{transform:translateX(0)}
+
   .main{padding:22px 15px}
-  .stats-grid,.admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .stats-grid,
+  .admin-stats{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
   .welcome-card{padding:18px}
   .welcome-card h2{font-size:19px}
 }
 
-@media(max-width:520px){
-  .login-wrap{padding:12px}
+/* =========================
+   توافق الموبايل
+   ========================= */
 
-  .login-card{
-    min-height:680px;
-    border-radius:34px;
-    padding:0 18px 18px;
+@media(max-width:520px){
+  .login-wrap{
+    padding:14px;
+    background-position:center center;
   }
 
-  .login-card::before{height:225px}
-  .brand-logo{font-size:22px;margin-top:27px}
-  .slogan{font-size:16px;margin:17px 0 29px}
-  .landscape{margin-left:-18px;margin-right:-18px}
+  .login-card{
+    width:100%;
+    max-width:390px;
+    min-height:0;
+    border-radius:23px;
+    padding:24px 18px 18px;
+  }
 
-  .quick-grid,.form-grid{grid-template-columns:1fr}
-  .stats-grid,.admin-stats{grid-template-columns:1fr 1fr}
+  .brand-logo{
+    width:min(100%,260px);
+    height:90px;
+  }
+
+  .slogan{
+    font-size:17px;
+    margin:5px 0 20px;
+  }
+
+  .field{min-height:49px}
+
+  .login-help{margin-top:15px}
+  .footer-login{margin-top:14px}
+
+  .quick-grid,
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stats-grid,
+  .admin-stats{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
   .stat{padding:14px}
   .stat b{font-size:24px}
-  .task-row{grid-template-columns:1fr 1fr}
-  .task-row input:first-child{grid-column:1/-1}
+
+  .task-row{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .task-row input:first-child{
+    grid-column:1/-1;
+  }
+
   .complaint-row{gap:8px}
   .complaint-main{flex-basis:100%}
+
   .topbar{padding:0 12px}
   .brand-small{font-size:17px}
 }
