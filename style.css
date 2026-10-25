@@ -39,7 +39,7 @@ button{cursor:pointer}
   padding:24px 16px;
   background:
     linear-gradient(rgba(0,55,33,.10),rgba(0,55,33,.08)),
-    url("login-background.png.png") center center / cover no-repeat;
+  url("login-background.png.png.jpeg") center center / cover no-repeat;
 }
 
 .login-card{
