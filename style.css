@@ -724,3 +724,21 @@ footer{
   .brand-small{font-size:17px}
 }
 ```
+.login-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.login-card .brand-logo::before,
+.login-card .brand-logo::after {
+  pointer-events: none;
+}
+
+.login-card .brand-logo::before {
+  z-index: 0;
+}
+
+.login-card .brand-logo {
+  z-index: 1;
+}
