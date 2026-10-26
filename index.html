@@ -1,5 +1,144 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#005b3b"><title>صحتك فلاحي</title><link rel="stylesheet" href="style.css"></head><body>
-<div id="toast" class="toast" hidden></div>
-<section id="loginView" class="login-wrap"><div class="login-card"><div class="brand-logo"><span>صحتك فلاحي</span></div><p class="slogan">معاً .. نبني غداً أفضل</p><form id="loginForm"><label class="field"><span>♙</span><input id="loginCode" autocomplete="username" placeholder="اسم المستخدم أو كود الموظف" required></label><label class="field"><span>♙</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="كلمة المرور" required></label><button class="btn primary" type="submit">تسجيل الدخول <b>➜</b></button></form><p class="login-help">نظام الموارد البشرية والتقارير اليومية</p><div class="landscape"><div class="sun"></div><div class="fields"></div><div class="farm">⌂</div></div><small class="footer-login">صحتك فلاحي - الإدارة المركزية</small></div></section>
-<div id="appView" hidden><header class="topbar"><button id="menuToggle" class="icon-btn" aria-label="القائمة">☰</button><div class="brand-small">صحتك فلاحي</div><button id="logoutBtn" class="icon-btn" title="تسجيل الخروج">↪</button></header><div class="app-layout"><aside id="sidebar" class="sidebar"><div class="profile"><div class="avatar">●</div><strong id="sideName">مرحباً</strong><span id="sideCode"></span><small id="sideBranch"></small></div><nav><button data-page="home" class="nav-item active">⌂ <span>الرئيسية</span></button><button data-page="report" class="nav-item">▤ <span>التقرير اليومي</span></button><button data-page="complaints" class="nav-item">☏ <span>الشكاوى</span></button><button data-page="admin" class="nav-item admin-only" hidden>▦ <span>لوحة الإدارة</span></button><button data-page="employees" class="nav-item admin-only" hidden>♙ <span>تقارير الموظفين</span></button></nav><div class="sidebar-tag">كل مجهودك مهم ..<br>ونحن نقدره</div></aside><main class="main"><div id="pageContent"></div><footer>صحتك فلاحي · نظام الموارد البشرية والتقارير اليومية</footer></main></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script></body></html>
+```html
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#005b3b">
+  <title>صحتك فلاحي</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- تسجيل الدخول -->
+  <section id="loginView" class="login-wrap">
+    <div class="login-card">
+      <div class="brand-logo">
+        <span>صحتك فلاحي</span>
+      </div>
+
+      <p class="slogan">معاً .. نبني غداً أفضل</p>
+
+      <form id="loginForm">
+        <label class="field">
+          <span>♙</span>
+          <input
+            id="loginCode"
+            autocomplete="username"
+            placeholder="اسم المستخدم أو كود الموظف"
+            required
+          >
+        </label>
+
+        <label class="field">
+          <span>♙</span>
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            placeholder="كلمة المرور"
+            required
+          >
+        </label>
+
+        <button class="btn primary" type="submit">
+          تسجيل الدخول <b>➜</b>
+        </button>
+      </form>
+
+      <p class="login-help">نظام الموارد البشرية والتقارير اليومية</p>
+
+      <div class="landscape">
+        <div class="sun"></div>
+        <div class="fields"></div>
+        <div class="farm">⌂</div>
+      </div>
+
+      <small class="footer-login">صحتك فلاحي - الإدارة المركزية</small>
+    </div>
+  </section>
+
+  <!-- التطبيق -->
+  <div id="appView" hidden>
+    <header class="topbar">
+      <button
+        id="menuToggle"
+        class="icon-btn"
+        aria-label="القائمة"
+        type="button"
+      >☰</button>
+
+      <div class="brand-small">صحتك فلاحي</div>
+
+      <button
+        id="logoutBtn"
+        class="icon-btn"
+        type="button"
+        title="تسجيل الخروج"
+        aria-label="تسجيل الخروج"
+      >تسجيل الخروج ↪</button>
+    </header>
+
+    <div class="app-layout">
+      <aside id="sidebar" class="sidebar">
+        <div class="profile">
+          <div class="avatar">●</div>
+          <strong id="sideName">مرحباً</strong>
+          <span id="sideCode"></span>
+          <small id="sideBranch"></small>
+        </div>
+
+        <nav>
+          <button data-page="home" class="nav-item active" type="button">
+            ⌂ <span>الرئيسية</span>
+          </button>
+
+          <button data-page="report" class="nav-item" type="button">
+            ▤ <span>التقرير اليومي</span>
+          </button>
+
+          <button data-page="complaints" class="nav-item" type="button">
+            ☏ <span>الشكاوى</span>
+          </button>
+
+          <button
+            data-page="admin"
+            class="nav-item admin-only"
+            type="button"
+            hidden
+          >
+            ▦ <span>لوحة الإدارة</span>
+          </button>
+
+          <button
+            data-page="employees"
+            class="nav-item admin-only"
+            type="button"
+            hidden
+          >
+            ♙ <span>تقارير الموظفين</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-tag">
+          كل مجهودك مهم ..<br>
+          ونحن نقدره
+        </div>
+      </aside>
+
+      <main class="main">
+        <div id="pageContent"></div>
+        <footer>صحتك فلاحي · نظام الموارد البشرية والتقارير اليومية</footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
+```
