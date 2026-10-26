@@ -1,118 +1,87 @@
-```html
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#075b42">
-  <meta name="description" content="صحتك فلاحي - منتجات طبيعية ونظام الموارد البشرية والتقارير اليومية">
+  <meta name="description" content="صحتك فلاحي - نظام الموارد البشرية والتقارير اليومية">
   <title>صحتك فلاحي | رجعنالك عافية زمان</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- رسائل التنبيه -->
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <!-- شاشة تسجيل الدخول -->
+  <!-- تسجيل الدخول -->
   <section id="loginView" class="login-wrap">
     <div class="login-card">
-
-      <div class="brand-logo" aria-label="صحتك فلاحي">
-        <span>صحتك فلاحي</span>
+      <div class="brand">
+        <h1>صحتك فلاحي</h1>
+        <p>رجعنالك عافية زمان</p>
       </div>
 
-      <p class="slogan">رجعنالك عافية زمان</p>
-
-      <div class="login-intro">
-        <span class="login-intro-icon" aria-hidden="true">✦</span>
-        <h1>أهلاً بيك في فريقنا</h1>
-        <p>كل مجهود بيبدأ بخطوة، وكل خطوة بتفرق.</p>
-      </div>
+      <h2>تسجيل الدخول</h2>
+      <p>سجّل دخولك للوصول إلى نظام الموظفين</p>
 
       <form id="loginForm">
-        <label class="field">
-          <span aria-hidden="true">♙</span>
-          <input
-            id="loginCode"
-            name="username"
-            autocomplete="username"
-            placeholder="اسم المستخدم أو كود الموظف"
-            aria-label="اسم المستخدم أو كود الموظف"
-            required
-          >
-        </label>
+        <label for="loginCode">كود الموظف</label>
+        <input
+          id="loginCode"
+          name="code"
+          type="text"
+          autocomplete="username"
+          required
+          placeholder="أدخل كود الموظف"
+        >
 
-        <label class="field">
-          <span aria-hidden="true">◆</span>
-          <input
-            id="loginPassword"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            placeholder="كلمة المرور"
-            aria-label="كلمة المرور"
-            required
-          >
-        </label>
+        <label for="loginPassword">كلمة المرور</label>
+        <input
+          id="loginPassword"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          placeholder="أدخل كلمة المرور"
+        >
 
-        <button class="btn primary" type="submit">
-          تسجيل الدخول <b aria-hidden="true">←</b>
+        <button type="submit" class="btn btn-primary">
+          تسجيل الدخول
         </button>
       </form>
-
-      <p class="login-help">نظام الموارد البشرية والتقارير اليومية</p>
-
-      <!-- زخرفة مستوحاة من الطبيعة -->
-      <div class="landscape" aria-hidden="true">
-        <div class="sun"></div>
-        <div class="fields"></div>
-        <div class="farm">⌂</div>
-      </div>
-
-      <small class="footer-login">
-        صحتك فلاحي <span aria-hidden="true">•</span> الإدارة المركزية
-      </small>
     </div>
   </section>
 
-  <!-- واجهة التطبيق -->
+  <!-- التطبيق -->
   <div id="appView" hidden>
-
-    <!-- الشريط العلوي -->
     <header class="topbar">
       <button
         id="menuToggle"
-        class="icon-btn"
-        aria-label="فتح القائمة"
-        aria-controls="sidebar"
+        class="menu-toggle"
         type="button"
+        aria-label="فتح القائمة"
       >☰</button>
 
-      <div class="brand-small">
-        <span class="brand-name">صحتك فلاحي</span>
-        <span class="brand-slogan">رجعنالك عافية زمان</span>
+      <div class="topbar-brand">
+        <strong>صحتك فلاحي</strong>
+        <span>رجعنالك عافية زمان</span>
       </div>
 
-      <button
-        id="logoutBtn"
-        class="icon-btn"
-        type="button"
-        title="تسجيل الخروج"
-        aria-label="تسجيل الخروج"
-      >تسجيل الخروج ↪</button>
+      <div class="topbar-actions">
+        <span id="headerEmployeeName"></span>
+        <button id="logoutBtn" class="btn btn-outline" type="button">
+          تسجيل الخروج
+        </button>
+      </div>
     </header>
 
     <div class="app-layout">
-
-      <!-- القائمة الجانبية -->
       <aside id="sidebar" class="sidebar">
-
         <div class="profile">
-          <div class="avatar" aria-hidden="true">✦</div>
-          <strong id="sideName">مرحباً</strong>
-          <span id="sideCode"></span>
-          <small id="sideBranch"></small>
+          <div class="profile-avatar">ص</div>
+          <div>
+            <strong id="employeeName"></strong>
+            <span id="employeeRole"></span>
+          </div>
         </div>
 
         <div class="sidebar-heading">القائمة الرئيسية</div>
@@ -122,76 +91,80 @@
             data-page="home"
             class="nav-item active"
             type="button"
-          >
-            <span class="nav-icon" aria-hidden="true">⌂</span>
-            <span>الرئيسية</span>
-          </button>
+          >الرئيسية</button>
 
           <button
             data-page="report"
             class="nav-item"
             type="button"
-          >
-            <span class="nav-icon" aria-hidden="true">▤</span>
-            <span>التقرير اليومي</span>
-          </button>
+          >التقرير اليومي</button>
 
           <button
             data-page="complaints"
             class="nav-item"
             type="button"
-          >
-            <span class="nav-icon" aria-hidden="true">☏</span>
-            <span>الشكاوى والمقترحات</span>
-          </button>
+          >الشكاوى والمقترحات</button>
 
           <button
-            data-page="admin"
-            class="nav-item admin-only"
+            data-page="employeeReports"
+            class="nav-item manager-only"
             type="button"
             hidden
-          >
-            <span class="nav-icon" aria-hidden="true">▦</span>
-            <span>لوحة الإدارة</span>
-          </button>
+          >تقارير الموظفين</button>
 
           <button
             data-page="employees"
             class="nav-item admin-only"
             type="button"
             hidden
-          >
-            <span class="nav-icon" aria-hidden="true">♙</span>
-            <span>تقارير الموظفين</span>
-          </button>
+          >إضافة الموظفين</button>
+
+          <button
+            data-page="permissions"
+            class="nav-item admin-only"
+            type="button"
+            hidden
+          >إدارة الصلاحيات</button>
+
+          <button
+            data-page="admin"
+            class="nav-item admin-only"
+            type="button"
+            hidden
+          >لوحة الإدارة</button>
+
+          <button
+            data-page="password"
+            class="nav-item"
+            type="button"
+          >تغيير كلمة المرور</button>
+
+          <button
+            data-page="passwordLog"
+            class="nav-item admin-only"
+            type="button"
+            hidden
+          >سجل كلمات المرور</button>
         </nav>
 
         <div class="sidebar-tag">
-          كل مجهود مهم .|.<br>
-          ونحن نقدره
+          <span>صحتك فلاحي</span>
+          <small>نظام إدارة الموظفين</small>
         </div>
-
       </aside>
 
-      <!-- محتوى الصفحات الذي يملؤه app.js -->
       <main class="main">
         <div id="pageContent"></div>
 
-        <footer>
-          <span>صحتك فلاحي</span>
-          <span aria-hidden="true">•</span>
-          <span>رجعنالك عافية زمان</span>
+        <footer class="app-footer">
+          صحتك فلاحي — نظام الموارد البشرية والتقارير اليومية
         </footer>
       </main>
-
     </div>
   </div>
 
-  <!-- ملفات النظام الأساسية -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
-
 </body>
 </html>
-```
