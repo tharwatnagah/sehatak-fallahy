@@ -1,4 +1,4 @@
-```javascript
+
 (() => {
   'use strict';
 
@@ -127,9 +127,7 @@
 
     const { data, error } = await supabase
       .from('employees')
-      .select(
-        'id,auth_user_id,code,name,branch,department,role,active'
-      )
+      .select('id,auth_user_id,code,name,branch,department,role,active')
       .eq('auth_user_id', user.id)
       .maybeSingle();
 
@@ -149,6 +147,7 @@
     return true;
   }
 
+  // تسجيل الدخول
   const loginForm = $('#loginForm');
 
   if (loginForm) {
@@ -165,24 +164,31 @@
         return;
       }
 
+      // تعديل: تكوين البريد الإلكتروني بدون استخدام template literal
       const email = code.includes('@')
         ? code
-        : `${code}@sehatak-fallahy.local`;
+        : code + '@sehatak-fallahy.local';
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
-      if (error) {
-        toast('تعذر تسجيل الدخول. راجع الكود وكلمة المرور.', true);
-        return;
-      }
+        if (error) {
+          console.error('Login error:', error);
+          toast('تعذر تسجيل الدخول. راجع الكود وكلمة المرور.', true);
+          return;
+        }
 
-      if (await loadEmployee()) {
-        showApp();
-      } else {
-        showLogin();
+        if (await loadEmployee()) {
+          showApp();
+        } else {
+          showLogin();
+        }
+      } catch (error) {
+        console.error('Unexpected login error:', error);
+        toast('حدث خطأ أثناء تسجيل الدخول. راجع Console.', true);
       }
     });
   }
@@ -399,14 +405,9 @@
       <h3>معلومات سريعة</h3>
 
       <div class="stats-grid">
-        ${statsCard(
-          'التقارير اليومية',
-          reportsResult.count ?? 0
-        )}
-
+        ${statsCard('التقارير اليومية', reportsResult.count ?? 0)}
         ${statsCard('الشكاوى قيد المراجعة', open)}
         ${statsCard('الشكاوى التي تم حلها', resolved)}
-
         ${
           isAdmin()
             ? statsCard('إجمالي الموظفين', employeesResult.count ?? 0)
@@ -455,8 +456,7 @@
         <div id="tasks">
           <div class="task-row">
             <input name="task_name" placeholder="المهمة" required>
-            <input name="task_qty" type="number" min="0"
-              placeholder="الكمية">
+            <input name="task_qty" type="number" min="0" placeholder="الكمية">
             <input name="task_note" placeholder="ملاحظات">
           </div>
         </div>
@@ -465,24 +465,11 @@
           ＋ إضافة مهمة
         </button>
 
-        <label>
-          ما لم يتم اليوم
-          <textarea name="remaining"></textarea>
-        </label>
+        <label>ما لم يتم اليوم<textarea name="remaining"></textarea></label>
+        <label>خطة العمل لليوم القادم<textarea name="next_plan"></textarea></label>
+        <label>المعوقات<textarea name="obstacles"></textarea></label>
 
-        <label>
-          خطة العمل لليوم القادم
-          <textarea name="next_plan"></textarea>
-        </label>
-
-        <label>
-          المعوقات
-          <textarea name="obstacles"></textarea>
-        </label>
-
-        <button class="btn primary full" type="submit">
-          حفظ التقرير
-        </button>
+        <button class="btn primary full" type="submit">حفظ التقرير</button>
       </form>
 
       <h3>آخر تقاريرك</h3>
@@ -495,9 +482,7 @@
                 <b>تقرير يوم ${esc(row.report_date)}</b>
                 <small>رمز المهمة: ${esc(row.task_code || '—')}</small>
               </div>
-              <span class="pill done">
-                ${esc(row.status || 'مكتمل')}
-              </span>
+              <span class="pill done">${esc(row.status || 'مكتمل')}</span>
             </div>
           `).join('') ||
           '<div class="empty">لا توجد تقارير محفوظة.</div>'
@@ -508,14 +493,11 @@
     $('#addTask').onclick = () => {
       const row = document.createElement('div');
       row.className = 'task-row';
-
       row.innerHTML = `
         <input name="task_name" placeholder="المهمة" required>
-        <input name="task_qty" type="number" min="0"
-          placeholder="الكمية">
+        <input name="task_qty" type="number" min="0" placeholder="الكمية">
         <input name="task_note" placeholder="ملاحظات">
       `;
-
       $('#tasks').appendChild(row);
     };
 
@@ -561,9 +543,7 @@
   async function renderComplaints() {
     let query = supabase
       .from('complaints')
-      .select(
-        'id,employee_id,kind,title,details,status,created_at,employees(name,code)'
-      )
+      .select('id,employee_id,kind,title,details,status,created_at,employees(name,code)')
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -579,7 +559,6 @@
 
       <div class="panel form-panel">
         <h3>تقديم شكوى جديدة</h3>
-
         <form id="complaintForm">
           <label>
             نوع الشكوى
@@ -592,20 +571,9 @@
               <option>أخرى</option>
             </select>
           </label>
-
-          <label>
-            العنوان
-            <input name="title" required>
-          </label>
-
-          <label>
-            التفاصيل
-            <textarea name="details" required></textarea>
-          </label>
-
-          <button class="btn primary full" type="submit">
-            إرسال الشكوى
-          </button>
+          <label>العنوان<input name="title" required></label>
+          <label>التفاصيل<textarea name="details" required></textarea></label>
+          <button class="btn primary full" type="submit">إرسال الشكوى</button>
         </form>
       </div>
 
@@ -615,10 +583,8 @@
             <div class="complaint-row">
               <div class="complaint-main">
                 <b>${esc(item.title)}</b>
-
                 <small>
-                  ${esc(item.kind)} ·
-                  ${esc((item.created_at || '').slice(0, 10))}
+                  ${esc(item.kind)} · ${esc((item.created_at || '').slice(0, 10))}
                   ${
                     isManager() && item.employees
                       ? ' · ' + esc(item.employees.name) +
@@ -626,32 +592,18 @@
                       : ''
                   }
                 </small>
-
                 <p>${esc(item.details)}</p>
               </div>
-
               <span class="pill ${
-                item.status === 'تم الحل'
-                  ? 'done'
-                  : item.status === 'مرفوضة'
-                    ? 'rejected'
-                    : 'review'
-              }">
-                ${esc(item.status)}
-              </span>
-
+                item.status === 'تم الحل' ? 'done' :
+                item.status === 'مرفوضة' ? 'rejected' : 'review'
+              }">${esc(item.status)}</span>
               ${
                 isManager()
                   ? `<select data-status-id="${esc(item.id)}">
-                      <option ${item.status === 'قيد المراجعة' ? 'selected' : ''}>
-                        قيد المراجعة
-                      </option>
-                      <option ${item.status === 'تم الحل' ? 'selected' : ''}>
-                        تم الحل
-                      </option>
-                      <option ${item.status === 'مرفوضة' ? 'selected' : ''}>
-                        مرفوضة
-                      </option>
+                      <option ${item.status === 'قيد المراجعة' ? 'selected' : ''}>قيد المراجعة</option>
+                      <option ${item.status === 'تم الحل' ? 'selected' : ''}>تم الحل</option>
+                      <option ${item.status === 'مرفوضة' ? 'selected' : ''}>مرفوضة</option>
                     </select>`
                   : ''
               }
@@ -664,7 +616,6 @@
 
     $('#complaintForm').onsubmit = async (event) => {
       event.preventDefault();
-
       const formData = new FormData(event.currentTarget);
 
       const { error: saveError } = await supabase
@@ -711,20 +662,11 @@
   async function renderAdmin() {
     const [employeesResult, reportsResult, complaintsResult] =
       await Promise.all([
-        supabase
-          .from('employees')
-          .select('id,code,name,branch,department,role,active', {
-            count: 'exact'
-          })
+        supabase.from('employees')
+          .select('id,code,name,branch,department,role,active', { count: 'exact' })
           .order('code'),
-
-        supabase
-          .from('reports')
-          .select('id', { count: 'exact', head: true }),
-
-        supabase
-          .from('complaints')
-          .select('id,status')
+        supabase.from('reports').select('id', { count: 'exact', head: true }),
+        supabase.from('complaints').select('id,status')
       ]);
 
     if (employeesResult.error) throw employeesResult.error;
@@ -735,62 +677,28 @@
 
     pageContent.innerHTML = `
       ${heading('لوحة الإدارة المركزية', 'ملخص النظام')}
-
       <div class="stats-grid admin-stats">
-        ${statsCard(
-          'إجمالي الموظفين',
-          employeesResult.count ?? 0
-        )}
-
-        ${statsCard(
-          'التقارير اليومية',
-          reportsResult.count ?? 0
-        )}
-
-        ${statsCard(
-          'الشكاوى قيد المراجعة',
-          complaints.filter(
-            (item) => item.status === 'قيد المراجعة'
-          ).length
-        )}
-
-        ${statsCard(
-          'الشكاوى المحلولة',
-          complaints.filter(
-            (item) => item.status === 'تم الحل'
-          ).length
-        )}
+        ${statsCard('إجمالي الموظفين', employeesResult.count ?? 0)}
+        ${statsCard('التقارير اليومية', reportsResult.count ?? 0)}
+        ${statsCard('الشكاوى قيد المراجعة', complaints.filter((item) => item.status === 'قيد المراجعة').length)}
+        ${statsCard('الشكاوى المحلولة', complaints.filter((item) => item.status === 'تم الحل').length)}
       </div>
-
       <h3>الموظفون</h3>
-
       <div class="list">
         ${
           (employeesResult.data || []).map((item) => `
             <div class="list-row">
               <div class="grow">
                 <b>${esc(item.name)}</b>
-                <small>
-                  كود: ${esc(item.code)} ·
-                  ${esc(item.branch || '—')} ·
-                  ${esc(item.department || '')}
-                </small>
+                <small>كود: ${esc(item.code)} · ${esc(item.branch || '—')} · ${esc(item.department || '')}</small>
               </div>
-
-              <span class="pill ${
-                item.active ? 'done' : 'rejected'
-              }">
-                ${item.active ? 'نشط' : 'غير نشط'}
-              </span>
+              <span class="pill ${item.active ? 'done' : 'rejected'}">${item.active ? 'نشط' : 'غير نشط'}</span>
             </div>
           `).join('') ||
           '<div class="empty">لا توجد سجلات موظفين.</div>'
         }
       </div>
-
-      <button class="btn primary" id="openReports">
-        عرض تقارير الموظفين
-      </button>
+      <button class="btn primary" id="openReports">عرض تقارير الموظفين</button>
     `;
 
     $('#openReports').onclick = () => {
@@ -819,7 +727,6 @@
     if (reportsError) throw reportsError;
 
     const lastReport = {};
-
     (reports || []).forEach((report) => {
       if (!lastReport[report.employee_id]) {
         lastReport[report.employee_id] = report.report_date;
@@ -828,34 +735,15 @@
 
     pageContent.innerHTML = `
       ${heading('إدارة الموظفين', 'إضافة موظفين والبحث في القائمة')}
-
       <form id="newEmployeeForm" class="panel form-panel">
         <h3>إضافة موظف جديد</h3>
-
-        <label>
-          اسم الموظف
-          <input name="name" required maxlength="150">
-        </label>
-
+        <label>اسم الموظف<input name="name" required maxlength="150"></label>
         <div class="form-grid">
-          <label>
-            كود الموظف
-            <input name="code" required maxlength="50"
-              pattern="[a-zA-Z0-9._-]+">
-          </label>
-
-          <label>
-            الفرع
-            <input name="branch" maxlength="150">
-          </label>
+          <label>كود الموظف<input name="code" required maxlength="50" pattern="[a-zA-Z0-9._-]+"></label>
+          <label>الفرع<input name="branch" maxlength="150"></label>
         </div>
-
         <div class="form-grid">
-          <label>
-            القسم
-            <input name="department" maxlength="150">
-          </label>
-
+          <label>القسم<input name="department" maxlength="150"></label>
           <label>
             الصلاحية
             <select name="role">
@@ -865,27 +753,12 @@
             </select>
           </label>
         </div>
-
-        <label>
-          كلمة مرور حساب الدخول
-          <input name="password" type="password"
-            minlength="8" autocomplete="new-password" required>
-        </label>
-
-        <p class="hint">
-          يجب أن تكون وظيفة create-employee منشأة ومؤمّنة في Supabase.
-        </p>
-
-        <button class="btn primary full" type="submit">
-          إنشاء الموظف وحساب الدخول
-        </button>
+        <label>كلمة مرور حساب الدخول<input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+        <p class="hint">يجب أن تكون وظيفة create-employee منشأة ومؤمّنة في Supabase.</p>
+        <button class="btn primary full" type="submit">إنشاء الموظف وحساب الدخول</button>
       </form>
-
       <h3>قائمة الموظفين</h3>
-
-      <input id="employeeSearch" class="search-input"
-        placeholder="ابحث بالاسم أو الكود أو الفرع">
-
+      <input id="employeeSearch" class="search-input" placeholder="ابحث بالاسم أو الكود أو الفرع">
       <div id="employeeList" class="list"></div>
     `;
 
@@ -895,35 +768,19 @@
       $('#employeeList').innerHTML = (data || [])
         .filter((item) =>
           [item.name, item.code, item.branch, item.department]
-            .some((value) =>
-              String(value || '').toLowerCase().includes(search)
-            )
+            .some((value) => String(value || '').toLowerCase().includes(search))
         )
         .map((item) => `
           <div class="list-row">
             <div class="grow">
               <b>${esc(item.name)}</b>
-              <small>
-                الكود: ${esc(item.code)} ·
-                ${esc(item.branch || '—')} ·
-                ${esc(item.department || '')}
-              </small>
-              <small>
-                آخر تقرير:
-                ${esc(lastReport[item.id] || 'لا يوجد')}
-              </small>
+              <small>الكود: ${esc(item.code)} · ${esc(item.branch || '—')} · ${esc(item.department || '')}</small>
+              <small>آخر تقرير: ${esc(lastReport[item.id] || 'لا يوجد')}</small>
             </div>
-
-            <span class="pill ${
-              item.active ? 'done' : 'rejected'
-            }">
-              ${item.active ? 'نشط' : 'غير نشط'}
-            </span>
-
+            <span class="pill ${item.active ? 'done' : 'rejected'}">${item.active ? 'نشط' : 'غير نشط'}</span>
             <span>${esc(item.role || 'employee')}</span>
           </div>
-        `).join('') ||
-        '<div class="empty">لا توجد نتائج.</div>';
+        `).join('') || '<div class="empty">لا توجد نتائج.</div>';
     };
 
     $('#employeeSearch').addEventListener('input', drawEmployees);
@@ -933,7 +790,6 @@
       event.preventDefault();
 
       const form = event.currentTarget;
-      const button = form.querySelector('button[type="submit"]');
       const formData = new FormData(form);
 
       const payload = {
@@ -950,19 +806,16 @@
         return;
       }
 
+      const button = form.querySelector('button[type="submit"]');
       button.disabled = true;
       button.textContent = 'جارٍ إنشاء الحساب...';
 
       try {
         const { data: result, error: invokeError } =
-          await supabase.functions.invoke('create-employee', {
-            body: payload
-          });
+          await supabase.functions.invoke('create-employee', { body: payload });
 
         if (invokeError) {
-          throw new Error(
-            'تعذر تنفيذ وظيفة إنشاء الموظف. راجع إعدادات Edge Function.'
-          );
+          throw new Error('تعذر تنفيذ وظيفة إنشاء الموظف. راجع إعدادات Edge Function.');
         }
 
         if (!result?.success) {
@@ -976,9 +829,7 @@
         console.error(error);
         toast(error.message || 'تعذر إنشاء الموظف.', true);
       } finally {
-        const submitButton =
-          $('#newEmployeeForm')?.querySelector('button[type="submit"]');
-
+        const submitButton = $('#newEmployeeForm')?.querySelector('button[type="submit"]');
         if (submitButton) {
           submitButton.disabled = false;
           submitButton.textContent = 'إنشاء الموظف وحساب الدخول';
@@ -993,16 +844,11 @@
     }
 
     const [employeesResult, reportsResult] = await Promise.all([
-      supabase
-        .from('employees')
+      supabase.from('employees')
         .select('id,code,name,branch,department')
         .order('name'),
-
-      supabase
-        .from('reports')
-        .select(
-          'id,employee_id,report_date,task_code,tasks,remaining,next_plan,obstacles,status,created_at'
-        )
+      supabase.from('reports')
+        .select('id,employee_id,report_date,task_code,tasks,remaining,next_plan,obstacles,status,created_at')
         .order('report_date', { ascending: false })
         .limit(5000)
     ]);
@@ -1011,9 +857,7 @@
     if (reportsResult.error) throw reportsResult.error;
 
     const employees = employeesResult.data || [];
-    const employeeMap = new Map(
-      employees.map((item) => [item.id, item])
-    );
+    const employeeMap = new Map(employees.map((item) => [item.id, item]));
 
     reportRows = (reportsResult.data || []).map((report) => ({
       ...report,
@@ -1021,49 +865,23 @@
     }));
 
     pageContent.innerHTML = `
-      ${heading(
-        'تقارير الموظفين',
-        'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير'
-      )}
-
+      ${heading('تقارير الموظفين', 'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير')}
       <div class="panel form-panel">
         <div class="form-grid">
           <label>
             الموظف
             <select id="filterEmployee">
               <option value="">كل الموظفين</option>
-              ${employees.map((item) => `
-                <option value="${esc(item.id)}">
-                  ${esc(item.name)} - ${esc(item.code)}
-                </option>
-              `).join('')}
+              ${employees.map((item) => `<option value="${esc(item.id)}">${esc(item.name)} - ${esc(item.code)}</option>`).join('')}
             </select>
           </label>
-
-          <label>
-            من تاريخ
-            <input id="filterFrom" type="date">
-          </label>
-
-          <label>
-            إلى تاريخ
-            <input id="filterTo" type="date" value="${dateToday()}">
-          </label>
+          <label>من تاريخ<input id="filterFrom" type="date"></label>
+          <label>إلى تاريخ<input id="filterTo" type="date" value="${dateToday()}"></label>
         </div>
-
-        <button class="btn primary" id="applyReportFilters">
-          عرض التقارير
-        </button>
-
-        <button class="outline" id="exportReports">
-          تصدير CSV لبرنامج Excel
-        </button>
-
-        <button class="outline" id="printReports">
-          طباعة التقارير
-        </button>
+        <button class="btn primary" id="applyReportFilters">عرض التقارير</button>
+        <button class="outline" id="exportReports">تصدير CSV لبرنامج Excel</button>
+        <button class="outline" id="printReports">طباعة التقارير</button>
       </div>
-
       <div id="reportSummary" class="stats-grid"></div>
       <div id="employeeReportsList" class="list"></div>
     `;
@@ -1071,7 +889,6 @@
     $('#applyReportFilters').onclick = drawReports;
     $('#exportReports').onclick = exportReportsCSV;
     $('#printReports').onclick = printReports;
-
     drawReports();
   }
 
@@ -1081,14 +898,9 @@
     const to = $('#filterTo')?.value || '';
 
     return reportRows.filter((report) => {
-      if (selectedEmployee &&
-          report.employee_id !== selectedEmployee) {
-        return false;
-      }
-
+      if (selectedEmployee && report.employee_id !== selectedEmployee) return false;
       if (from && report.report_date < from) return false;
       if (to && report.report_date > to) return false;
-
       return true;
     });
   }
@@ -1098,10 +910,7 @@
 
     $('#reportSummary').innerHTML =
       statsCard('عدد التقارير', rows.length) +
-      statsCard(
-        'عدد الموظفين',
-        new Set(rows.map((row) => row.employee_id)).size
-      );
+      statsCard('عدد الموظفين', new Set(rows.map((row) => row.employee_id)).size);
 
     $('#employeeReportsList').innerHTML = rows.map((report) => {
       const employeeInfo = report.employee || {};
@@ -1110,41 +919,18 @@
       return `
         <article class="panel report-detail">
           <h3>${esc(employeeInfo.name || 'موظف')}</h3>
-
-          <p>
-            الكود: ${esc(employeeInfo.code || '—')} ·
-            الفرع: ${esc(employeeInfo.branch || '—')}
-          </p>
-
-          <p>
-            التاريخ: ${esc(report.report_date)} ·
-            رمز المهمة: ${esc(report.task_code || '—')}
-          </p>
-
+          <p>الكود: ${esc(employeeInfo.code || '—')} · الفرع: ${esc(employeeInfo.branch || '—')}</p>
+          <p>التاريخ: ${esc(report.report_date)} · رمز المهمة: ${esc(report.task_code || '—')}</p>
           <p>الحالة: ${esc(report.status || '—')}</p>
-
           <h4>المهام المنفذة</h4>
-
           ${
             tasks.length
-              ? `<ul>${tasks.map((task) => `
-                  <li>
-                    ${esc(task.name || '')}
-                    — الكمية: ${esc(task.qty || '—')}
-                    — ${esc(task.note || '')}
-                  </li>
-                `).join('')}</ul>`
+              ? `<ul>${tasks.map((task) => `<li>${esc(task.name || '')} — الكمية: ${esc(task.qty || '—')} — ${esc(task.note || '')}</li>`).join('')}</ul>`
               : '<p>لا توجد تفاصيل مهام.</p>'
           }
-
-          <h4>ما لم يتم</h4>
-          <p>${esc(report.remaining || '—')}</p>
-
-          <h4>خطة اليوم القادم</h4>
-          <p>${esc(report.next_plan || '—')}</p>
-
-          <h4>المعوقات</h4>
-          <p>${esc(report.obstacles || '—')}</p>
+          <h4>ما لم يتم</h4><p>${esc(report.remaining || '—')}</p>
+          <h4>خطة اليوم القادم</h4><p>${esc(report.next_plan || '—')}</p>
+          <h4>المعوقات</h4><p>${esc(report.obstacles || '—')}</p>
         </article>
       `;
     }).join('') || '<div class="empty">لا توجد تقارير في الفترة المحددة.</div>';
@@ -1152,12 +938,7 @@
 
   function csvCell(value) {
     let text = String(value ?? '');
-
-    // حماية من تفسير المحتوى كنص قابل للتنفيذ داخل برامج الجداول.
-    if (/^[=+\-@\t\r]/.test(text)) {
-      text = "'" + text;
-    }
-
+    if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
     return '"' + text.replace(/"/g, '""') + '"';
   }
 
@@ -1170,17 +951,9 @@
     }
 
     const columns = [
-      'اسم الموظف',
-      'كود الموظف',
-      'الفرع',
-      'القسم',
-      'تاريخ التقرير',
-      'رمز المهمة',
-      'المهام المنفذة',
-      'ما لم يتم',
-      'خطة اليوم القادم',
-      'المعوقات',
-      'الحالة'
+      'اسم الموظف', 'كود الموظف', 'الفرع', 'القسم',
+      'تاريخ التقرير', 'رمز المهمة', 'المهام المنفذة',
+      'ما لم يتم', 'خطة اليوم القادم', 'المعوقات', 'الحالة'
     ];
 
     const csvRows = rows.map((report) => {
@@ -1192,29 +965,17 @@
         : '';
 
       return [
-        employeeInfo.name,
-        employeeInfo.code,
-        employeeInfo.branch,
-        employeeInfo.department,
-        report.report_date,
-        report.task_code,
-        tasks,
-        report.remaining,
-        report.next_plan,
-        report.obstacles,
+        employeeInfo.name, employeeInfo.code, employeeInfo.branch,
+        employeeInfo.department, report.report_date, report.task_code,
+        tasks, report.remaining, report.next_plan, report.obstacles,
         report.status
       ];
     });
 
     const csv = '\uFEFF' +
-      [columns, ...csvRows]
-        .map((row) => row.map(csvCell).join(','))
-        .join('\r\n');
+      [columns, ...csvRows].map((row) => row.map(csvCell).join(',')).join('\r\n');
 
-    const blob = new Blob([csv], {
-      type: 'text/csv;charset=utf-8;'
-    });
-
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
 
@@ -1224,8 +985,8 @@
     document.body.appendChild(link);
     link.click();
     link.remove();
-
     URL.revokeObjectURL(url);
+
     toast('تم تصدير التقارير. يمكنك فتح الملف في Excel.');
   }
 
@@ -1272,10 +1033,7 @@
     win.document.write(`
       <!doctype html>
       <html lang="ar" dir="rtl">
-      <head>
-        <meta charset="utf-8">
-        <title>تقارير الموظفين</title>
-      </head>
+      <head><meta charset="utf-8"><title>تقارير الموظفين</title></head>
       <body style="font-family:Arial,sans-serif;direction:rtl">
         <h1>تقارير الموظفين</h1>
         ${printable}
@@ -1294,23 +1052,10 @@
   function renderPassword() {
     pageContent.innerHTML = `
       ${heading('تغيير كلمة المرور', 'تحديث كلمة مرور حسابك')}
-
       <form id="passwordForm" class="panel form-panel">
-        <label>
-          كلمة المرور الجديدة
-          <input name="password" type="password"
-            minlength="8" autocomplete="new-password" required>
-        </label>
-
-        <label>
-          تأكيد كلمة المرور
-          <input name="confirmPassword" type="password"
-            minlength="8" autocomplete="new-password" required>
-        </label>
-
-        <button class="btn primary full" type="submit">
-          تحديث كلمة المرور
-        </button>
+        <label>كلمة المرور الجديدة<input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+        <label>تأكيد كلمة المرور<input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+        <button class="btn primary full" type="submit">تحديث كلمة المرور</button>
       </form>
     `;
 
@@ -1319,9 +1064,7 @@
 
       const formData = new FormData(event.currentTarget);
       const password = String(formData.get('password') || '');
-      const confirmPassword = String(
-        formData.get('confirmPassword') || ''
-      );
+      const confirmPassword = String(formData.get('confirmPassword') || '');
 
       if (password.length < 8) {
         toast('كلمة المرور يجب ألا تقل عن 8 أحرف.', true);
@@ -1340,7 +1083,6 @@
         return;
       }
 
-      // سجل التغيير اختياري حسب إعداد الجدول وسياسات RLS.
       try {
         await supabase.from('password_change_log').insert({
           employee_id: employee.id,
@@ -1366,7 +1108,6 @@
 
     pageContent.innerHTML = `
       ${heading('سجل تغييرات كلمات المرور', 'آخر 100 سجل')}
-
       <div class="list">
         ${
           (data || []).map((item) => `
@@ -1376,8 +1117,7 @@
                 <small>${esc(item.changed_at || '—')}</small>
               </div>
             </div>
-          `).join('') ||
-          '<div class="empty">لا توجد سجلات.</div>'
+          `).join('') || '<div class="empty">لا توجد سجلات.</div>'
         }
       </div>
     `;
@@ -1395,7 +1135,9 @@
       } else {
         showLogin();
       }
+    }).catch((error) => {
+      console.error('Session initialization error:', error);
+      showLogin();
     });
   }
 })();
-```
