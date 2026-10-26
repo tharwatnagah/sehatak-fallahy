@@ -4,73 +4,95 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#005b3b">
-  <title>صحتك فلاحي</title>
+  <meta name="theme-color" content="#075b42">
+  <meta name="description" content="صحتك فلاحي - منتجات طبيعية ونظام الموارد البشرية والتقارير اليومية">
+  <title>صحتك فلاحي | رجعنالك عافية زمان</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div id="toast" class="toast" hidden></div>
+  <!-- رسائل التنبيه -->
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <!-- تسجيل الدخول -->
+  <!-- شاشة تسجيل الدخول -->
   <section id="loginView" class="login-wrap">
     <div class="login-card">
-      <div class="brand-logo">
+
+      <div class="brand-logo" aria-label="صحتك فلاحي">
         <span>صحتك فلاحي</span>
       </div>
 
-      <p class="slogan">معاً .. نبني غداً أفضل</p>
+      <p class="slogan">رجعنالك عافية زمان</p>
+
+      <div class="login-intro">
+        <span class="login-intro-icon" aria-hidden="true">✦</span>
+        <h1>أهلاً بيك في فريقنا</h1>
+        <p>كل مجهود بيبدأ بخطوة، وكل خطوة بتفرق.</p>
+      </div>
 
       <form id="loginForm">
         <label class="field">
-          <span>♙</span>
+          <span aria-hidden="true">♙</span>
           <input
             id="loginCode"
+            name="username"
             autocomplete="username"
             placeholder="اسم المستخدم أو كود الموظف"
+            aria-label="اسم المستخدم أو كود الموظف"
             required
           >
         </label>
 
         <label class="field">
-          <span>♙</span>
+          <span aria-hidden="true">◆</span>
           <input
             id="loginPassword"
+            name="password"
             type="password"
             autocomplete="current-password"
             placeholder="كلمة المرور"
+            aria-label="كلمة المرور"
             required
           >
         </label>
 
         <button class="btn primary" type="submit">
-          تسجيل الدخول <b>➜</b>
+          تسجيل الدخول <b aria-hidden="true">←</b>
         </button>
       </form>
 
       <p class="login-help">نظام الموارد البشرية والتقارير اليومية</p>
 
-      <div class="landscape">
+      <!-- زخرفة مستوحاة من الطبيعة -->
+      <div class="landscape" aria-hidden="true">
         <div class="sun"></div>
         <div class="fields"></div>
         <div class="farm">⌂</div>
       </div>
 
-      <small class="footer-login">صحتك فلاحي - الإدارة المركزية</small>
+      <small class="footer-login">
+        صحتك فلاحي <span aria-hidden="true">•</span> الإدارة المركزية
+      </small>
     </div>
   </section>
 
-  <!-- التطبيق -->
+  <!-- واجهة التطبيق -->
   <div id="appView" hidden>
+
+    <!-- الشريط العلوي -->
     <header class="topbar">
       <button
         id="menuToggle"
         class="icon-btn"
-        aria-label="القائمة"
+        aria-label="فتح القائمة"
+        aria-controls="sidebar"
         type="button"
       >☰</button>
 
-      <div class="brand-small">صحتك فلاحي</div>
+      <div class="brand-small">
+        <span class="brand-name">صحتك فلاحي</span>
+        <span class="brand-slogan">رجعنالك عافية زمان</span>
+      </div>
 
       <button
         id="logoutBtn"
@@ -82,25 +104,45 @@
     </header>
 
     <div class="app-layout">
+
+      <!-- القائمة الجانبية -->
       <aside id="sidebar" class="sidebar">
+
         <div class="profile">
-          <div class="avatar">●</div>
+          <div class="avatar" aria-hidden="true">✦</div>
           <strong id="sideName">مرحباً</strong>
           <span id="sideCode"></span>
           <small id="sideBranch"></small>
         </div>
 
-        <nav>
-          <button data-page="home" class="nav-item active" type="button">
-            ⌂ <span>الرئيسية</span>
+        <div class="sidebar-heading">القائمة الرئيسية</div>
+
+        <nav aria-label="القائمة الرئيسية">
+          <button
+            data-page="home"
+            class="nav-item active"
+            type="button"
+          >
+            <span class="nav-icon" aria-hidden="true">⌂</span>
+            <span>الرئيسية</span>
           </button>
 
-          <button data-page="report" class="nav-item" type="button">
-            ▤ <span>التقرير اليومي</span>
+          <button
+            data-page="report"
+            class="nav-item"
+            type="button"
+          >
+            <span class="nav-icon" aria-hidden="true">▤</span>
+            <span>التقرير اليومي</span>
           </button>
 
-          <button data-page="complaints" class="nav-item" type="button">
-            ☏ <span>الشكاوى</span>
+          <button
+            data-page="complaints"
+            class="nav-item"
+            type="button"
+          >
+            <span class="nav-icon" aria-hidden="true">☏</span>
+            <span>الشكاوى والمقترحات</span>
           </button>
 
           <button
@@ -109,7 +151,8 @@
             type="button"
             hidden
           >
-            ▦ <span>لوحة الإدارة</span>
+            <span class="nav-icon" aria-hidden="true">▦</span>
+            <span>لوحة الإدارة</span>
           </button>
 
           <button
@@ -118,23 +161,33 @@
             type="button"
             hidden
           >
-            ♙ <span>تقارير الموظفين</span>
+            <span class="nav-icon" aria-hidden="true">♙</span>
+            <span>تقارير الموظفين</span>
           </button>
         </nav>
 
         <div class="sidebar-tag">
-          كل مجهودك مهم ..<br>
+          كل مجهود مهم .|.<br>
           ونحن نقدره
         </div>
+
       </aside>
 
+      <!-- محتوى الصفحات الذي يملؤه app.js -->
       <main class="main">
         <div id="pageContent"></div>
-        <footer>صحتك فلاحي · نظام الموارد البشرية والتقارير اليومية</footer>
+
+        <footer>
+          <span>صحتك فلاحي</span>
+          <span aria-hidden="true">•</span>
+          <span>رجعنالك عافية زمان</span>
+        </footer>
       </main>
+
     </div>
   </div>
 
+  <!-- ملفات النظام الأساسية -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
