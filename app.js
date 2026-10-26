@@ -39,6 +39,7 @@
 
   function toast(message, bad = false) {
     const box = $('#toast');
+
     if (!box) {
       alert(message);
       return;
@@ -97,6 +98,7 @@
     if (loginView) loginView.hidden = true;
     if (appView) appView.hidden = false;
 
+    // دعم أسماء العناصر في نسختي HTML
     if ($('#sideName')) {
       $('#sideName').textContent = 'مرحباً ' + employee.name;
     }
@@ -109,6 +111,20 @@
       $('#sideBranch').textContent =
         'الفرع: ' + (employee.branch || '—') +
         ' · ' + (employee.department || '');
+    }
+
+    if ($('#employeeName')) {
+      $('#employeeName').textContent = employee.name || '';
+    }
+
+    if ($('#employeeRole')) {
+      $('#employeeRole').textContent =
+        employee.role === 'admin' ? 'مسؤول النظام' :
+        employee.role === 'manager' ? 'مدير تقارير' : 'موظف';
+    }
+
+    if ($('#headerEmployeeName')) {
+      $('#headerEmployeeName').textContent = employee.name || '';
     }
 
     applyPermissions();
@@ -164,7 +180,6 @@
         return;
       }
 
-      // تعديل: تكوين البريد الإلكتروني بدون استخدام template literal
       const email = code.includes('@')
         ? code
         : code + '@sehatak-fallahy.local';
@@ -193,6 +208,7 @@
     });
   }
 
+  // تسجيل الخروج
   const logoutBtn = $('#logoutBtn');
 
   if (logoutBtn) {
@@ -201,10 +217,12 @@
 
       user = null;
       employee = null;
+      currentPage = 'home';
       showLogin();
     });
   }
 
+  // فتح القائمة الجانبية
   const menuToggle = $('#menuToggle');
 
   if (menuToggle) {
@@ -213,28 +231,22 @@
     });
   }
 
+  // التنقل بين الصفحات
   document.querySelectorAll('.nav-item').forEach((button) => {
     button.addEventListener('click', () => {
       if (!employee) return;
 
-      if (button.classList.contains('admin-only') && !isAdmin()) {
-        toast('ليس لديك صلاحية لهذه الصفحة.', true);
-        return;
-      }
+      const page = button.dataset.page;
 
       if (
-        (button.dataset.page === 'employees' ||
-         button.dataset.page === 'admin') &&
+        ['employees', 'admin', 'permissions', 'passwordLog'].includes(page) &&
         !isAdmin()
       ) {
-        toast('هذه الصفحة مخصصة للمسؤول.', true);
+        toast('هذه الصفحة مخصصة لمسؤول النظام.', true);
         return;
       }
 
-      if (
-        button.dataset.page === 'employeeReports' &&
-        !isManager()
-      ) {
+      if (page === 'employeeReports' && !isManager()) {
         toast('ليس لديك صلاحية عرض تقارير الموظفين.', true);
         return;
       }
@@ -243,7 +255,7 @@
         item.classList.toggle('active', item === button);
       });
 
-      currentPage = button.dataset.page;
+      currentPage = page;
       $('#sidebar')?.classList.remove('open');
       renderPage(currentPage);
     });
@@ -303,6 +315,13 @@
           await renderEmployees();
           break;
 
+        case 'permissions':
+          if (!isAdmin()) {
+            throw new Error('إدارة الصلاحيات متاحة للمسؤول فقط.');
+          }
+          await renderPermissions();
+          break;
+
         case 'employeeReports':
           if (!isManager()) {
             throw new Error('ليس لديك صلاحية عرض تقارير الموظفين.');
@@ -330,6 +349,7 @@
     }
   }
 
+  // الصفحة الرئيسية
   async function renderHome() {
     let reportsQuery = supabase
       .from('reports')
@@ -360,9 +380,11 @@
     if (employeesResult.error) throw employeesResult.error;
 
     const complaints = complaintsResult.data || [];
+
     const open = complaints.filter(
       (item) => item.status === 'قيد المراجعة'
     ).length;
+
     const resolved = complaints.filter(
       (item) => item.status === 'تم الحل'
     ).length;
@@ -382,21 +404,34 @@
       </div>
 
       <div class="quick-grid">
-        <button class="quick green" data-go="report">
+        <button class="quick green" data-go="report" type="button">
           <b>التقرير اليومي</b>
           <small>سجل أعمالك اليومية</small>
         </button>
 
-        <button class="quick" data-go="complaints">
+        <button class="quick" data-go="complaints" type="button">
           <b>الشكاوى والمقترحات</b>
           <small>تقديم شكوى ومتابعتها</small>
         </button>
 
         ${
           isManager()
-            ? `<button class="quick" data-go="employeeReports">
+            ? `<button class="quick" data-go="employeeReports" type="button">
                 <b>تقارير الموظفين</b>
                 <small>عرض التقارير حسب الفترة</small>
+              </button>`
+            : ''
+        }
+
+        ${
+          isAdmin()
+            ? `<button class="quick" data-go="employees" type="button">
+                <b>إضافة الموظفين</b>
+                <small>إنشاء حساب موظف جديد</small>
+              </button>
+              <button class="quick" data-go="permissions" type="button">
+                <b>إدارة الصلاحيات</b>
+                <small>تعديل الأدوار وحالة الحسابات</small>
               </button>`
             : ''
         }
@@ -418,12 +453,28 @@
 
     pageContent.querySelectorAll('[data-go]').forEach((button) => {
       button.addEventListener('click', () => {
-        currentPage = button.dataset.go;
+        const page = button.dataset.go;
+
+        if (
+          ['employees', 'permissions', 'admin'].includes(page) &&
+          !isAdmin()
+        ) {
+          toast('ليس لديك صلاحية لهذه الصفحة.', true);
+          return;
+        }
+
+        if (page === 'employeeReports' && !isManager()) {
+          toast('ليس لديك صلاحية عرض تقارير الموظفين.', true);
+          return;
+        }
+
+        currentPage = page;
         renderPage(currentPage);
       });
     });
   }
 
+  // التقرير اليومي
   async function renderReport() {
     const { data: rows, error } = await supabase
       .from('reports')
@@ -540,6 +591,7 @@
     };
   }
 
+  // الشكاوى والمقترحات
   async function renderComplaints() {
     let query = supabase
       .from('complaints')
@@ -659,6 +711,7 @@
     });
   }
 
+  // لوحة الإدارة
   async function renderAdmin() {
     const [employeesResult, reportsResult, complaintsResult] =
       await Promise.all([
@@ -698,7 +751,7 @@
           '<div class="empty">لا توجد سجلات موظفين.</div>'
         }
       </div>
-      <button class="btn primary" id="openReports">عرض تقارير الموظفين</button>
+      <button class="btn primary" id="openReports" type="button">عرض تقارير الموظفين</button>
     `;
 
     $('#openReports').onclick = () => {
@@ -707,6 +760,7 @@
     };
   }
 
+  // إضافة الموظفين
   async function renderEmployees() {
     if (!canManageEmployees()) {
       throw new Error('إدارة الموظفين متاحة للمسؤول فقط.');
@@ -727,6 +781,7 @@
     if (reportsError) throw reportsError;
 
     const lastReport = {};
+
     (reports || []).forEach((report) => {
       if (!lastReport[report.employee_id]) {
         lastReport[report.employee_id] = report.report_date;
@@ -734,18 +789,34 @@
     });
 
     pageContent.innerHTML = `
-      ${heading('إدارة الموظفين', 'إضافة موظفين والبحث في القائمة')}
+      ${heading('إضافة الموظفين', 'إنشاء حسابات جديدة والبحث في القائمة')}
+
       <form id="newEmployeeForm" class="panel form-panel">
         <h3>إضافة موظف جديد</h3>
-        <label>اسم الموظف<input name="name" required maxlength="150"></label>
+
+        <label>
+          اسم الموظف
+          <input name="name" required maxlength="150">
+        </label>
+
         <div class="form-grid">
-          <label>كود الموظف<input name="code" required maxlength="50" pattern="[a-zA-Z0-9._-]+"></label>
-          <label>الفرع<input name="branch" maxlength="150"></label>
-        </div>
-        <div class="form-grid">
-          <label>القسم<input name="department" maxlength="150"></label>
           <label>
-            الصلاحية
+            كود الموظف
+            <input name="code" required maxlength="50" pattern="[a-zA-Z0-9._-]+">
+          </label>
+          <label>
+            الفرع
+            <input name="branch" maxlength="150">
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            القسم
+            <input name="department" maxlength="150">
+          </label>
+          <label>
+            الصلاحية الأولية
             <select name="role">
               <option value="employee">موظف</option>
               <option value="manager">مدير تقارير</option>
@@ -753,12 +824,25 @@
             </select>
           </label>
         </div>
-        <label>كلمة مرور حساب الدخول<input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
-        <p class="hint">يجب أن تكون وظيفة create-employee منشأة ومؤمّنة في Supabase.</p>
-        <button class="btn primary full" type="submit">إنشاء الموظف وحساب الدخول</button>
+
+        <label>
+          كلمة مرور حساب الدخول
+          <input name="password" type="password" minlength="8"
+            autocomplete="new-password" required>
+        </label>
+
+        <p class="hint">
+          يجب أن تكون وظيفة create-employee منشأة ومؤمّنة في Supabase.
+        </p>
+
+        <button class="btn primary full" type="submit">
+          إنشاء الموظف وحساب الدخول
+        </button>
       </form>
+
       <h3>قائمة الموظفين</h3>
-      <input id="employeeSearch" class="search-input" placeholder="ابحث بالاسم أو الكود أو الفرع">
+      <input id="employeeSearch" class="search-input"
+        placeholder="ابحث بالاسم أو الكود أو الفرع">
       <div id="employeeList" class="list"></div>
     `;
 
@@ -774,11 +858,19 @@
           <div class="list-row">
             <div class="grow">
               <b>${esc(item.name)}</b>
-              <small>الكود: ${esc(item.code)} · ${esc(item.branch || '—')} · ${esc(item.department || '')}</small>
+              <small>
+                الكود: ${esc(item.code)} · ${esc(item.branch || '—')}
+                · ${esc(item.department || '')}
+              </small>
               <small>آخر تقرير: ${esc(lastReport[item.id] || 'لا يوجد')}</small>
             </div>
-            <span class="pill ${item.active ? 'done' : 'rejected'}">${item.active ? 'نشط' : 'غير نشط'}</span>
-            <span>${esc(item.role || 'employee')}</span>
+            <span class="pill ${item.active ? 'done' : 'rejected'}">
+              ${item.active ? 'نشط' : 'غير نشط'}
+            </span>
+            <span>${
+              item.role === 'admin' ? 'مسؤول النظام' :
+              item.role === 'manager' ? 'مدير تقارير' : 'موظف'
+            }</span>
           </div>
         `).join('') || '<div class="empty">لا توجد نتائج.</div>';
     };
@@ -811,11 +903,18 @@
       button.textContent = 'جارٍ إنشاء الحساب...';
 
       try {
+        // الحفاظ على وظيفة إنشاء الموظف الحالية
         const { data: result, error: invokeError } =
-          await supabase.functions.invoke('create-employee', { body: payload });
+          await supabase.functions.invoke('create-employee', {
+            body: payload
+          });
 
         if (invokeError) {
-          throw new Error('تعذر تنفيذ وظيفة إنشاء الموظف. راجع إعدادات Edge Function.');
+          console.error('Create employee function error:', invokeError);
+          throw new Error(
+            invokeError.message ||
+            'تعذر تنفيذ وظيفة إنشاء الموظف. راجع إعدادات Edge Function.'
+          );
         }
 
         if (!result?.success) {
@@ -823,13 +922,14 @@
         }
 
         toast('تم إنشاء الموظف بنجاح.');
-        form.reset();
         await renderEmployees();
       } catch (error) {
         console.error(error);
         toast(error.message || 'تعذر إنشاء الموظف.', true);
       } finally {
-        const submitButton = $('#newEmployeeForm')?.querySelector('button[type="submit"]');
+        const submitButton =
+          $('#newEmployeeForm')?.querySelector('button[type="submit"]');
+
         if (submitButton) {
           submitButton.disabled = false;
           submitButton.textContent = 'إنشاء الموظف وحساب الدخول';
@@ -838,6 +938,174 @@
     };
   }
 
+  // إدارة الصلاحيات: للمسؤول فقط
+  async function renderPermissions() {
+    if (!isAdmin()) {
+      throw new Error('إدارة الصلاحيات متاحة للمسؤول فقط.');
+    }
+
+    const { data: employees, error } = await supabase
+      .from('employees')
+      .select('id,code,name,branch,department,role,active')
+      .order('name');
+
+    if (error) throw error;
+
+    pageContent.innerHTML = `
+      ${heading(
+        'إدارة الصلاحيات',
+        'تحديد دور كل موظف وتفعيل أو تعطيل حسابه'
+      )}
+
+      <div class="panel">
+        <p>
+          الموظف العادي يرسل تقاريره ويتابع شكاواه.
+          مدير التقارير يمكنه الاطلاع على تقارير الموظفين.
+          مسؤول النظام يدير الموظفين والصلاحيات.
+        </p>
+        <p class="hint">
+          تغيير الدور هنا يعدّل بيانات الموظف في قاعدة البيانات.
+          يجب أن تكون سياسات RLS في Supabase مضبوطة لمنع التعديل غير المصرح به.
+        </p>
+      </div>
+
+      <input
+        id="permissionsSearch"
+        class="search-input"
+        placeholder="ابحث بالاسم أو الكود أو الفرع"
+      >
+
+      <div id="permissionsList" class="list"></div>
+    `;
+
+    const drawPermissions = () => {
+      const search = ($('#permissionsSearch')?.value || '')
+        .trim()
+        .toLowerCase();
+
+      const filtered = (employees || []).filter((item) =>
+        [item.name, item.code, item.branch, item.department]
+          .some((value) =>
+            String(value || '').toLowerCase().includes(search)
+          )
+      );
+
+      $('#permissionsList').innerHTML = filtered.map((item) => `
+        <form class="panel permission-form" data-permission-id="${esc(item.id)}">
+          <div class="list-row">
+            <div class="grow">
+              <b>${esc(item.name)}</b>
+              <small>
+                الكود: ${esc(item.code)}
+                · الفرع: ${esc(item.branch || '—')}
+                · القسم: ${esc(item.department || '—')}
+              </small>
+            </div>
+            <span class="pill ${item.active ? 'done' : 'rejected'}">
+              ${item.active ? 'نشط' : 'غير نشط'}
+            </span>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              دور الموظف
+              <select name="role">
+                <option value="employee" ${item.role === 'employee' ? 'selected' : ''}>موظف</option>
+                <option value="manager" ${item.role === 'manager' ? 'selected' : ''}>مدير تقارير</option>
+                <option value="admin" ${item.role === 'admin' ? 'selected' : ''}>مسؤول النظام</option>
+              </select>
+            </label>
+
+            <label>
+              حالة الحساب
+              <select name="active">
+                <option value="true" ${item.active ? 'selected' : ''}>نشط</option>
+                <option value="false" ${!item.active ? 'selected' : ''}>غير نشط</option>
+              </select>
+            </label>
+          </div>
+
+          <button class="btn primary full" type="submit">
+            حفظ الصلاحيات
+          </button>
+        </form>
+      `).join('') || '<div class="empty">لا توجد نتائج.</div>';
+
+      $('#permissionsList')
+        .querySelectorAll('.permission-form')
+        .forEach((form) => {
+          form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (!isAdmin()) {
+              toast('ليس لديك صلاحية تعديل الصلاحيات.', true);
+              return;
+            }
+
+            const id = form.dataset.permissionId;
+            const formData = new FormData(form);
+            const newRole = String(formData.get('role') || 'employee');
+            const newActive = formData.get('active') === 'true';
+
+            if (!['employee', 'manager', 'admin'].includes(newRole)) {
+              toast('نوع الصلاحية غير صحيح.', true);
+              return;
+            }
+
+            // منع تعطيل حساب المسؤول الحالي من هذه الصفحة
+            if (id === employee.id && !newActive) {
+              toast('لا يمكنك تعطيل حسابك الحالي أثناء تسجيل الدخول.', true);
+              return;
+            }
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'جارٍ الحفظ...';
+
+            try {
+              const { error: updateError } = await supabase
+                .from('employees')
+                .update({
+                  role: newRole,
+                  active: newActive
+                })
+                .eq('id', id);
+
+              if (updateError) {
+                throw updateError;
+              }
+
+              toast('تم حفظ صلاحيات الموظف بنجاح.');
+
+              const { data: updatedEmployees, error: reloadError } =
+                await supabase
+                  .from('employees')
+                  .select('id,code,name,branch,department,role,active')
+                  .order('name');
+
+              if (reloadError) throw reloadError;
+
+              employees.splice(0, employees.length, ...(updatedEmployees || []));
+              drawPermissions();
+            } catch (updateError) {
+              console.error('Permission update error:', updateError);
+              toast(
+                'تعذر حفظ الصلاحيات: ' +
+                (updateError.message || 'راجع سياسات Supabase وصلاحيات UPDATE.'),
+                true
+              );
+              submitButton.disabled = false;
+              submitButton.textContent = 'حفظ الصلاحيات';
+            }
+          });
+        });
+    };
+
+    $('#permissionsSearch').addEventListener('input', drawPermissions);
+    drawPermissions();
+  }
+
+  // تقارير الموظفين
   async function renderEmployeeReports() {
     if (!isManager()) {
       throw new Error('ليس لديك صلاحية عرض تقارير الموظفين.');
@@ -865,7 +1133,11 @@
     }));
 
     pageContent.innerHTML = `
-      ${heading('تقارير الموظفين', 'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير')}
+      ${heading(
+        'تقارير الموظفين',
+        'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير'
+      )}
+
       <div class="panel form-panel">
         <div class="form-grid">
           <label>
@@ -878,10 +1150,12 @@
           <label>من تاريخ<input id="filterFrom" type="date"></label>
           <label>إلى تاريخ<input id="filterTo" type="date" value="${dateToday()}"></label>
         </div>
-        <button class="btn primary" id="applyReportFilters">عرض التقارير</button>
-        <button class="outline" id="exportReports">تصدير CSV لبرنامج Excel</button>
-        <button class="outline" id="printReports">طباعة التقارير</button>
+
+        <button class="btn primary" id="applyReportFilters" type="button">عرض التقارير</button>
+        <button class="outline" id="exportReports" type="button">تصدير CSV لبرنامج Excel</button>
+        <button class="outline" id="printReports" type="button">طباعة التقارير</button>
       </div>
+
       <div id="reportSummary" class="stats-grid"></div>
       <div id="employeeReportsList" class="list"></div>
     `;
@@ -1049,6 +1323,7 @@
     win.document.close();
   }
 
+  // تغيير كلمة المرور
   function renderPassword() {
     pageContent.innerHTML = `
       ${heading('تغيير كلمة المرور', 'تحديث كلمة مرور حسابك')}
@@ -1097,6 +1372,7 @@
     };
   }
 
+  // سجل تغييرات كلمات المرور
   async function renderPasswordLog() {
     const { data, error } = await supabase
       .from('password_change_log')
@@ -1123,6 +1399,7 @@
     `;
   }
 
+  // استعادة الجلسة عند فتح التطبيق
   if (initClient()) {
     supabase.auth.getSession().then(async ({ data, error }) => {
       if (error) {
