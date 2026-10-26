@@ -1,3 +1,4 @@
+```javascript
 (() => {
   'use strict';
 
@@ -12,81 +13,65 @@
   let user = null;
   let employee = null;
   let currentPage = 'home';
-  let loginInProgress = false;
+  let reportRows = [];
 
   const esc = (value = '') =>
-    String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    String(value ?? '').replace(/[&<>"']/g, (c) => ({
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#39;'
-    }[char]));
+    })[c]);
 
   const dateToday = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
+    const d = new Date();
+    return [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0')
+    ].join('-');
   };
 
-  function toast(message, bad = false) {
-    const element = $('#toast');
+  const isAdmin = () => employee?.role === 'admin';
+  const isManager = () => ['admin', 'manager'].includes(employee?.role);
+  const canManageEmployees = () => isAdmin();
 
-    if (!element) {
-      console[bad ? 'error' : 'log'](message);
+  function toast(message, bad = false) {
+    const box = $('#toast');
+    if (!box) {
+      alert(message);
       return;
     }
 
-    element.textContent = message;
-    element.className = 'toast' + (bad ? ' bad' : '');
-    element.hidden = false;
+    box.textContent = message;
+    box.className = 'toast' + (bad ? ' bad' : '');
+    box.hidden = false;
 
-    clearTimeout(toast.timer);
-
-    toast.timer = setTimeout(() => {
-      element.hidden = true;
-    }, 5000);
+    clearTimeout(box._timer);
+    box._timer = setTimeout(() => {
+      box.hidden = true;
+    }, 4500);
   }
 
   function initClient() {
-    if (supabase) return true;
-
     if (
       !window.supabase ||
-      typeof window.supabase.createClient !== 'function'
+      !cfg.SUPABASE_URL ||
+      !cfg.SUPABASE_PUBLISHABLE_KEY
     ) {
-      toast('مكتبة Supabase لم يتم تحميلها. راجع اتصال الإنترنت وملف index.html.', true);
+      toast('راجع إعدادات Supabase داخل config.js.', true);
       return false;
     }
 
-    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_PUBLISHABLE_KEY) {
-      toast('راجع SUPABASE_URL وSUPABASE_PUBLISHABLE_KEY داخل config.js.', true);
-      return false;
-    }
-
-    if (
-      String(cfg.SUPABASE_URL).includes('PASTE_') ||
-      String(cfg.SUPABASE_PUBLISHABLE_KEY).includes('PASTE_')
-    ) {
-      toast('بيانات Supabase داخل config.js ما زالت غير مكتملة.', true);
-      return false;
-    }
-
-    try {
+    if (!supabase) {
       supabase = window.supabase.createClient(
         cfg.SUPABASE_URL,
         cfg.SUPABASE_PUBLISHABLE_KEY
       );
-
-      return true;
-    } catch (error) {
-      console.error('Supabase initialization error:', error);
-      toast('تعذر تشغيل الاتصال بقاعدة البيانات.', true);
-      return false;
     }
+
+    return true;
   }
 
   function showLogin() {
@@ -94,127 +79,49 @@
     if (appView) appView.hidden = true;
   }
 
-  function setActiveNav(page) {
-    document.querySelectorAll('.nav-item').forEach((button) => {
-      button.classList.toggle(
-        'active',
-        button.dataset.page === page
-      );
+  function applyPermissions() {
+    document.querySelectorAll('.admin-only').forEach((element) => {
+      element.hidden = !isAdmin();
+    });
+
+    document.querySelectorAll('.manager-only').forEach((element) => {
+      element.hidden = !isManager();
+    });
+
+    document.querySelectorAll('.reports-only').forEach((element) => {
+      element.hidden = !isManager();
     });
   }
 
-  function navigateTo(page) {
-    if (!employee) {
-      showLogin();
-      return;
-    }
-
-    if (
-      ['admin', 'employees', 'passwordLog'].includes(page) &&
-      employee.role !== 'admin'
-    ) {
-      toast('هذه الصفحة متاحة للمدير فقط.', true);
-      return;
-    }
-
-    currentPage = page;
-    setActiveNav(page);
-
-    const sidebar = $('#sidebar');
-    if (sidebar) sidebar.classList.remove('open');
-
-    renderPage(page);
-  }
-
-  function ensurePasswordNav() {
-    const sidebar = $('#sidebar');
-    if (!sidebar) return;
-
-    const nav = sidebar.querySelector('nav') || sidebar;
-
-    if (!$('#passwordNavBtn')) {
-      const button = document.createElement('button');
-
-      button.type = 'button';
-      button.id = 'passwordNavBtn';
-      button.className = 'nav-item';
-      button.dataset.page = 'password';
-      button.textContent = 'تغيير كلمة المرور';
-
-      nav.appendChild(button);
-    }
-
-    if (!$('#passwordLogNavBtn')) {
-      const button = document.createElement('button');
-
-      button.type = 'button';
-      button.id = 'passwordLogNavBtn';
-      button.className = 'nav-item admin-only';
-      button.dataset.page = 'passwordLog';
-      button.textContent = 'سجل تغييرات كلمات المرور';
-
-      nav.appendChild(button);
-    }
-
-    const logButton = $('#passwordLogNavBtn');
-
-    if (logButton) {
-      logButton.hidden = employee?.role !== 'admin';
-    }
-  }
-
   function showApp() {
-    if (!employee) {
-      showLogin();
-      return;
-    }
-
     if (loginView) loginView.hidden = true;
     if (appView) appView.hidden = false;
 
-    const sideName = $('#sideName');
-    const sideCode = $('#sideCode');
-    const sideBranch = $('#sideBranch');
-
-    if (sideName) {
-      sideName.textContent = 'مرحباً ' + employee.name;
+    if ($('#sideName')) {
+      $('#sideName').textContent = 'مرحباً ' + employee.name;
     }
 
-    if (sideCode) {
-      sideCode.textContent = 'كود الموظف: ' + employee.code;
+    if ($('#sideCode')) {
+      $('#sideCode').textContent = 'كود الموظف: ' + employee.code;
     }
 
-    if (sideBranch) {
-      sideBranch.textContent =
+    if ($('#sideBranch')) {
+      $('#sideBranch').textContent =
         'الفرع: ' + (employee.branch || '—') +
         ' · ' + (employee.department || '');
     }
 
-    document.querySelectorAll('.admin-only').forEach((element) => {
-      element.hidden = employee.role !== 'admin';
-    });
-
-    ensurePasswordNav();
-    setActiveNav(currentPage);
+    applyPermissions();
     renderPage(currentPage);
   }
 
   async function loadEmployee() {
     const {
-      data: { user: authUser } = {},
+      data: { user: authUser },
       error: authError
     } = await supabase.auth.getUser();
 
-    if (authError) {
-      console.error('Get user error:', authError);
-      toast('تعذر التحقق من جلسة تسجيل الدخول: ' + authError.message, true);
-      return false;
-    }
-
-    if (!authUser) {
-      toast('لم يتم العثور على جلسة دخول صالحة.', true);
-      return false;
-    }
+    if (authError || !authUser) return false;
 
     user = authUser;
 
@@ -227,41 +134,14 @@
       .maybeSingle();
 
     if (error) {
-      console.error('Load employee error:', error);
-
-      toast(
-        'تعذر قراءة بيانات الموظف من قاعدة البيانات: ' + error.message,
-        true
-      );
-
+      console.error(error);
+      toast('تعذر قراءة بيانات الموظف: ' + error.message, true);
       return false;
     }
 
-    if (!data) {
-      console.error(
-        'No employee record linked to auth user:',
-        user.id
-      );
-
-      toast(
-        'تم تسجيل الدخول، لكن حساب المستخدم غير مربوط بموظف في جدول employees.',
-        true
-      );
-
+    if (!data || !data.active) {
       await supabase.auth.signOut();
-      user = null;
-      employee = null;
-
-      return false;
-    }
-
-    if (!data.active) {
-      toast('هذا الحساب غير نشط. تواصل مع المسؤول.', true);
-
-      await supabase.auth.signOut();
-      user = null;
-      employee = null;
-
+      toast('الحساب غير نشط أو غير مربوط بموظف.', true);
       return false;
     }
 
@@ -269,192 +149,98 @@
     return true;
   }
 
-  // تسجيل الدخول
   const loginForm = $('#loginForm');
 
   if (loginForm) {
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
 
-      if (loginInProgress) return;
+      if (!initClient()) return;
 
-      loginInProgress = true;
+      const code = $('#loginCode')?.value.trim();
+      const password = $('#loginPassword')?.value;
 
-      const submitButton = loginForm.querySelector(
-        'button[type="submit"], input[type="submit"]'
-      );
+      if (!code || !password) {
+        toast('اكتب كود الموظف وكلمة المرور.', true);
+        return;
+      }
 
-      const originalText = submitButton
-        ? (
-            submitButton.tagName === 'INPUT'
-              ? submitButton.value
-              : submitButton.textContent
-          )
-        : '';
+      const email = code.includes('@')
+        ? code
+        : `${code}@sehatak-fallahy.local`;
 
-      try {
-        if (submitButton) {
-          submitButton.disabled = true;
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-          if (submitButton.tagName === 'INPUT') {
-            submitButton.value = 'جارٍ تسجيل الدخول...';
-          } else {
-            submitButton.textContent = 'جارٍ تسجيل الدخول...';
-          }
-        }
+      if (error) {
+        toast('تعذر تسجيل الدخول. راجع الكود وكلمة المرور.', true);
+        return;
+      }
 
-        if (!initClient()) {
-          return;
-        }
-
-        const codeInput = $('#loginCode');
-        const passwordInput = $('#loginPassword');
-
-        if (!codeInput || !passwordInput) {
-          throw new Error(
-            'حقول تسجيل الدخول غير موجودة. تأكد من IDs داخل index.html.'
-          );
-        }
-
-        const code = codeInput.value.trim();
-        const password = passwordInput.value;
-
-        if (!code || !password) {
-          throw new Error('اكتب كود الموظف أو البريد الإلكتروني وكلمة المرور.');
-        }
-
-        const email = code.includes('@')
-          ? code
-          : `${code}@sehatak-fallahy.local`;
-
-        console.log('Attempting sign in for:', email);
-
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          console.error('Supabase sign-in error:', error);
-
-          throw new Error(
-            'تعذر تسجيل الدخول. ' +
-            error.message
-          );
-        }
-
-        if (!data || !data.user) {
-          throw new Error(
-            'لم يتم استلام بيانات الحساب بعد تسجيل الدخول.'
-          );
-        }
-
-        user = data.user;
-
-        const loaded = await loadEmployee();
-
-        if (!loaded) {
-          showLogin();
-          return;
-        }
-
-        currentPage = 'home';
+      if (await loadEmployee()) {
         showApp();
-        toast('تم تسجيل الدخول بنجاح.');
-
-      } catch (error) {
-        console.error('Login error:', error);
-
-        toast(
-          error?.message ||
-          'حدث خطأ غير متوقع أثناء تسجيل الدخول.',
-          true
-        );
-
+      } else {
         showLogin();
-
-      } finally {
-        loginInProgress = false;
-
-        if (submitButton) {
-          submitButton.disabled = false;
-
-          if (submitButton.tagName === 'INPUT') {
-            submitButton.value = originalText || 'تسجيل الدخول';
-          } else {
-            submitButton.textContent = originalText || 'تسجيل الدخول';
-          }
-        }
       }
     });
-  } else {
-    console.error('Login form #loginForm was not found.');
   }
 
-  // تسجيل الخروج
   const logoutBtn = $('#logoutBtn');
 
   if (logoutBtn) {
-    logoutBtn.textContent = 'تسجيل الخروج ↪';
-    logoutBtn.style.display = 'inline-flex';
-    logoutBtn.style.alignItems = 'center';
-    logoutBtn.style.justifyContent = 'center';
-    logoutBtn.style.minWidth = '120px';
-    logoutBtn.style.fontSize = '14px';
-    logoutBtn.style.color = '#ffffff';
-    logoutBtn.style.background = '#00643f';
-    logoutBtn.style.border = '1px solid #e5cf22';
-    logoutBtn.style.borderRadius = '10px';
-    logoutBtn.style.padding = '8px 12px';
-    logoutBtn.style.whiteSpace = 'nowrap';
-
     logoutBtn.addEventListener('click', async () => {
-      logoutBtn.disabled = true;
+      if (supabase) await supabase.auth.signOut();
 
-      try {
-        if (supabase) {
-          const { error } = await supabase.auth.signOut();
-
-          if (error) {
-            console.error('Logout error:', error);
-            toast('تعذر تسجيل الخروج من الخادم: ' + error.message, true);
-          }
-        }
-      } catch (error) {
-        console.error('Logout error:', error);
-        toast('حدث خطأ أثناء تسجيل الخروج.', true);
-      } finally {
-        user = null;
-        employee = null;
-        currentPage = 'home';
-
-        showLogin();
-
-        logoutBtn.disabled = false;
-      }
+      user = null;
+      employee = null;
+      showLogin();
     });
   }
 
-  // القائمة الجانبية
   const menuToggle = $('#menuToggle');
 
   if (menuToggle) {
     menuToggle.addEventListener('click', () => {
-      const sidebar = $('#sidebar');
-      if (sidebar) sidebar.classList.toggle('open');
+      $('#sidebar')?.classList.toggle('open');
     });
   }
 
-  // التنقل بين الصفحات، بما فيها الأزرار التي تُضاف لاحقاً
-  document.addEventListener('click', (event) => {
-    const button = event.target.closest('.nav-item');
+  document.querySelectorAll('.nav-item').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!employee) return;
 
-    if (!button) return;
+      if (button.classList.contains('admin-only') && !isAdmin()) {
+        toast('ليس لديك صلاحية لهذه الصفحة.', true);
+        return;
+      }
 
-    const page = button.dataset.page;
-    if (!page) return;
+      if (
+        (button.dataset.page === 'employees' ||
+         button.dataset.page === 'admin') &&
+        !isAdmin()
+      ) {
+        toast('هذه الصفحة مخصصة للمسؤول.', true);
+        return;
+      }
 
-    navigateTo(page);
+      if (
+        button.dataset.page === 'employeeReports' &&
+        !isManager()
+      ) {
+        toast('ليس لديك صلاحية عرض تقارير الموظفين.', true);
+        return;
+      }
+
+      document.querySelectorAll('.nav-item').forEach((item) => {
+        item.classList.toggle('active', item === button);
+      });
+
+      currentPage = button.dataset.page;
+      $('#sidebar')?.classList.remove('open');
+      renderPage(currentPage);
+    });
   });
 
   function heading(title, subtitle = '') {
@@ -474,6 +260,10 @@
         ${subtitle ? `<small>${esc(subtitle)}</small>` : ''}
       </div>
     `;
+  }
+
+  function panel(message) {
+    return `<div class="panel">${esc(message)}</div>`;
   }
 
   async function renderPage(page) {
@@ -496,242 +286,55 @@
           break;
 
         case 'admin':
-          if (employee.role === 'admin') {
-            await renderAdmin();
-          } else {
-            await renderHome();
-          }
+          if (!isAdmin()) throw new Error('ليس لديك صلاحية.');
+          await renderAdmin();
           break;
 
         case 'employees':
-          if (employee.role === 'admin') {
-            await renderEmployees();
-          } else {
-            await renderHome();
+          if (!canManageEmployees()) {
+            throw new Error('ليس لديك صلاحية إدارة الموظفين.');
           }
+          await renderEmployees();
+          break;
+
+        case 'employeeReports':
+          if (!isManager()) {
+            throw new Error('ليس لديك صلاحية عرض تقارير الموظفين.');
+          }
+          await renderEmployeeReports();
           break;
 
         case 'password':
-          await renderPasswordChange();
+          renderPassword();
           break;
 
         case 'passwordLog':
-          if (employee.role === 'admin') {
-            await renderPasswordLog();
-          } else {
-            await renderHome();
-          }
+          if (!isAdmin()) throw new Error('ليس لديك صلاحية.');
+          await renderPasswordLog();
           break;
 
         default:
-          currentPage = 'home';
-          setActiveNav('home');
           await renderHome();
       }
     } catch (error) {
-      console.error('Render page error:', error);
-
-      pageContent.innerHTML = `
-        ${heading('حدث خطأ')}
-        <div class="panel">
-          ${esc(error?.message || 'تعذر تحميل البيانات.')}
-        </div>
-        <button class="btn primary" id="retryPageBtn" type="button">
-          إعادة المحاولة
-        </button>
-      `;
-
-      const retryButton = $('#retryPageBtn');
-
-      if (retryButton) {
-        retryButton.onclick = () => renderPage(currentPage);
-      }
-    }
-  }
-
-  // تغيير كلمة المرور
-  async function renderPasswordChange() {
-    pageContent.innerHTML = `
-      ${heading(
-        'تغيير كلمة المرور',
-        'غيّر كلمة مرور حسابك بأمان'
-      )}
-
-      <form id="passwordChangeForm" class="panel form-panel">
-        <label>
-          كلمة المرور الجديدة
-          <input
-            name="newPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            required
-            placeholder="8 أحرف على الأقل"
-          >
-        </label>
-
-        <label>
-          تأكيد كلمة المرور الجديدة
-          <input
-            name="confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            required
-            placeholder="أعد كتابة كلمة المرور الجديدة"
-          >
-        </label>
-
-        <p class="hint">
-          لن يتم حفظ كلمة المرور نفسها في سجل التغييرات.
-        </p>
-
-        <button class="btn primary full" type="submit">
-          تغيير كلمة المرور
-        </button>
-      </form>
-    `;
-
-    const form = $('#passwordChangeForm');
-
-    form.onsubmit = async (event) => {
-      event.preventDefault();
-
-      const newPassword = form.elements.newPassword.value;
-      const confirmPassword = form.elements.confirmPassword.value;
-      const button = form.querySelector('button[type="submit"]');
-
-      if (newPassword.length < 8) {
-        toast('كلمة المرور يجب أن تكون 8 أحرف على الأقل.', true);
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        toast('كلمتا المرور غير متطابقتين.', true);
-        return;
-      }
-
-      if (!supabase || !employee || !user) {
-        toast('انتهت الجلسة. سجّل الدخول مرة أخرى.', true);
-        return;
-      }
-
-      button.disabled = true;
-      button.textContent = 'جارٍ تغيير كلمة المرور...';
-
-      try {
-        const { error } = await supabase.auth.updateUser({
-          password: newPassword
-        });
-
-        if (error) {
-          toast('تعذر تغيير كلمة المرور: ' + error.message, true);
-          return;
-        }
-
-        const { error: logError } = await supabase
-          .from('password_change_log')
-          .insert({
-            employee_id: employee.id,
-            status: 'success'
-          });
-
-        form.reset();
-
-        if (logError) {
-          console.error(
-            'Password changed but log insert failed:',
-            logError
-          );
-
-          toast(
-            'تم تغيير كلمة المرور، لكن تعذر تسجيل العملية في السجل.',
-            true
-          );
-        } else {
-          toast('تم تغيير كلمة المرور وتسجيل العملية بنجاح.');
-        }
-      } catch (error) {
-        console.error('Password change error:', error);
-        toast('حدث خطأ غير متوقع أثناء تغيير كلمة المرور.', true);
-      } finally {
-        button.disabled = false;
-        button.textContent = 'تغيير كلمة المرور';
-      }
-    };
-  }
-
-  // سجل تغييرات كلمات المرور للمدير
-  async function renderPasswordLog() {
-    if (employee.role !== 'admin') {
+      console.error(error);
       pageContent.innerHTML =
-        heading('غير مسموح') +
-        '<div class="panel">هذه الصفحة للمدير فقط.</div>';
-
-      return;
+        heading('حدث خطأ') +
+        panel(error.message || 'تعذر تحميل البيانات.');
     }
-
-    const { data, error } = await supabase
-      .from('password_change_log')
-      .select('employee_id,changed_at,status,employees(name,code)')
-      .order('changed_at', { ascending: false })
-      .limit(100);
-
-    if (error) throw error;
-
-    pageContent.innerHTML = `
-      ${heading(
-        'سجل تغييرات كلمات المرور',
-        'آخر 100 عملية مسجلة'
-      )}
-
-      <div class="list">
-        ${(data || []).map((item) => `
-          <div class="list-row">
-            <div class="grow">
-              <b>${esc(item.employees?.name || 'موظف غير معروف')}</b>
-              <small>
-                الكود: ${esc(item.employees?.code || '—')}
-              </small>
-              <small>
-                التاريخ:
-                ${esc(
-                  item.changed_at
-                    ? new Date(item.changed_at).toLocaleString('ar-EG')
-                    : '—'
-                )}
-              </small>
-            </div>
-
-            <span class="pill ${
-              item.status === 'success' ? 'done' : 'review'
-            }">
-              ${item.status === 'success' ? 'تم التغيير' : 'لم يكتمل'}
-            </span>
-          </div>
-        `).join('') ||
-        '<div class="empty">لا توجد عمليات مسجلة.</div>'}
-      </div>
-    `;
   }
 
-  // الصفحة الرئيسية
   async function renderHome() {
-    const isAdmin = employee.role === 'admin';
-
     let reportsQuery = supabase
       .from('reports')
       .select('id', { count: 'exact', head: true });
-
-    if (!isAdmin) {
-      reportsQuery = reportsQuery.eq('employee_id', employee.id);
-    }
 
     let complaintsQuery = supabase
       .from('complaints')
       .select('id,status');
 
-    if (!isAdmin) {
+    if (!isManager()) {
+      reportsQuery = reportsQuery.eq('employee_id', employee.id);
       complaintsQuery = complaintsQuery.eq('employee_id', employee.id);
     }
 
@@ -739,26 +342,22 @@
       await Promise.all([
         reportsQuery,
         complaintsQuery,
-        isAdmin
+        isAdmin()
           ? supabase
               .from('employees')
               .select('id', { count: 'exact', head: true })
-              .eq('active', true)
-          : Promise.resolve({ count: 1, error: null })
+          : Promise.resolve({ count: null })
       ]);
 
     if (reportsResult.error) throw reportsResult.error;
     if (complaintsResult.error) throw complaintsResult.error;
-
     if (employeesResult.error) throw employeesResult.error;
 
     const complaints = complaintsResult.data || [];
-
-    const openComplaints = complaints.filter(
+    const open = complaints.filter(
       (item) => item.status === 'قيد المراجعة'
     ).length;
-
-    const resolvedComplaints = complaints.filter(
+    const resolved = complaints.filter(
       (item) => item.status === 'تم الحل'
     ).length;
 
@@ -770,26 +369,31 @@
           <h2>مرحباً ${esc(employee.name)}</h2>
           <p>كود الموظف: ${esc(employee.code)}</p>
           <small>
-            الفرع: ${esc(employee.branch || '—')} ·
-            ${esc(employee.department || '')}
+            الفرع: ${esc(employee.branch || '—')}
+            · ${esc(employee.department || '')}
           </small>
         </div>
-
-        <div class="avatar big">●</div>
       </div>
 
       <div class="quick-grid">
-        <button class="quick green" data-go="report" type="button">
-          <span class="round-icon">▤</span>
+        <button class="quick green" data-go="report">
           <b>التقرير اليومي</b>
           <small>سجل أعمالك اليومية</small>
         </button>
 
-        <button class="quick" data-go="complaints" type="button">
-          <span class="round-icon">☏</span>
-          <b>الشكاوى</b>
-          <small>قدم شكوى أو تابعها</small>
+        <button class="quick" data-go="complaints">
+          <b>الشكاوى والمقترحات</b>
+          <small>تقديم شكوى ومتابعتها</small>
         </button>
+
+        ${
+          isManager()
+            ? `<button class="quick" data-go="employeeReports">
+                <b>تقارير الموظفين</b>
+                <small>عرض التقارير حسب الفترة</small>
+              </button>`
+            : ''
+        }
       </div>
 
       <h3>معلومات سريعة</h3>
@@ -797,37 +401,28 @@
       <div class="stats-grid">
         ${statsCard(
           'التقارير اليومية',
-          reportsResult.count ?? 0,
-          'إجمالي التقارير المحفوظة'
+          reportsResult.count ?? 0
         )}
 
-        ${statsCard(
-          'الشكاوى قيد المراجعة',
-          openComplaints
-        )}
-
-        ${statsCard(
-          'الشكاوى التي تم حلها',
-          resolvedComplaints
-        )}
+        ${statsCard('الشكاوى قيد المراجعة', open)}
+        ${statsCard('الشكاوى التي تم حلها', resolved)}
 
         ${
-          isAdmin
-            ? statsCard(
-                'إجمالي الموظفين',
-                employeesResult.count ?? 0
-              )
+          isAdmin()
+            ? statsCard('إجمالي الموظفين', employeesResult.count ?? 0)
             : ''
         }
       </div>
     `;
 
     pageContent.querySelectorAll('[data-go]').forEach((button) => {
-      button.onclick = () => navigateTo(button.dataset.go);
+      button.addEventListener('click', () => {
+        currentPage = button.dataset.go;
+        renderPage(currentPage);
+      });
     });
   }
 
-  // التقرير اليومي
   async function renderReport() {
     const { data: rows, error } = await supabase
       .from('reports')
@@ -845,94 +440,68 @@
         <div class="form-grid">
           <label>
             التاريخ
-            <input
-              type="date"
-              name="report_date"
-              value="${dateToday()}"
-              required
-            >
+            <input type="date" name="report_date"
+              value="${dateToday()}" required>
           </label>
 
           <label>
-            رمز المهمة / الكود
-            <input
-              name="task_code"
-              placeholder="أدخل كود المهمة"
-            >
+            رمز المهمة
+            <input name="task_code" placeholder="كود المهمة">
           </label>
         </div>
 
-        <h3>أولاً: المهام المنفذة اليوم</h3>
+        <h3>المهام المنفذة اليوم</h3>
 
         <div id="tasks">
           <div class="task-row">
-            <input
-              name="task_name"
-              placeholder="المهمة"
-              required
-            >
-            <input
-              name="task_qty"
-              type="number"
-              min="0"
-              placeholder="الكمية / العدد"
-            >
-            <input
-              name="task_note"
-              placeholder="ملاحظات"
-            >
+            <input name="task_name" placeholder="المهمة" required>
+            <input name="task_qty" type="number" min="0"
+              placeholder="الكمية">
+            <input name="task_note" placeholder="ملاحظات">
           </div>
         </div>
 
         <button type="button" id="addTask" class="outline">
-          ＋ إضافة مهمة أخرى
+          ＋ إضافة مهمة
         </button>
 
         <label>
-          ثانياً: ما لم يتم اليوم
-          <textarea
-            name="remaining"
-            placeholder="اكتب ما لم يتم مع السبب إن وجد"
-          ></textarea>
+          ما لم يتم اليوم
+          <textarea name="remaining"></textarea>
         </label>
 
         <label>
-          ثالثاً: خطة العمل لليوم القادم
-          <textarea
-            name="next_plan"
-            placeholder="اكتب خطة العمل لليوم القادم"
-          ></textarea>
+          خطة العمل لليوم القادم
+          <textarea name="next_plan"></textarea>
         </label>
 
         <label>
-          رابعاً: المعوقات التي واجهتك
-          <textarea
-            name="obstacles"
-            placeholder="اكتب المعوقات أو المشاكل"
-          ></textarea>
+          المعوقات
+          <textarea name="obstacles"></textarea>
         </label>
 
         <button class="btn primary full" type="submit">
-          حفظ التقرير ▣
+          حفظ التقرير
         </button>
       </form>
 
       <h3>آخر تقاريرك</h3>
 
       <div class="list">
-        ${(rows || []).map((row) => `
-          <div class="list-row">
-            <div>
-              <b>تقرير يوم ${esc(row.report_date)}</b>
-              <small>رمز المهمة: ${esc(row.task_code || '—')}</small>
+        ${
+          (rows || []).map((row) => `
+            <div class="list-row">
+              <div>
+                <b>تقرير يوم ${esc(row.report_date)}</b>
+                <small>رمز المهمة: ${esc(row.task_code || '—')}</small>
+              </div>
+              <span class="pill done">
+                ${esc(row.status || 'مكتمل')}
+              </span>
             </div>
-
-            <span class="pill done">
-              ${esc(row.status || 'مكتمل')}
-            </span>
-          </div>
-        `).join('') ||
-        '<div class="empty">لا توجد تقارير محفوظة بعد.</div>'}
+          `).join('') ||
+          '<div class="empty">لا توجد تقارير محفوظة.</div>'
+        }
       </div>
     `;
 
@@ -942,12 +511,8 @@
 
       row.innerHTML = `
         <input name="task_name" placeholder="المهمة" required>
-        <input
-          name="task_qty"
-          type="number"
-          min="0"
-          placeholder="الكمية / العدد"
-        >
+        <input name="task_qty" type="number" min="0"
+          placeholder="الكمية">
         <input name="task_note" placeholder="ملاحظات">
       `;
 
@@ -957,26 +522,16 @@
     $('#reportForm').onsubmit = async (event) => {
       event.preventDefault();
 
-      const form = event.currentTarget;
-      const submitButton = form.querySelector('button[type="submit"]');
-      const formData = new FormData(form);
-
+      const formData = new FormData(event.currentTarget);
       const names = formData.getAll('task_name');
       const quantities = formData.getAll('task_qty');
       const notes = formData.getAll('task_note');
 
-      const tasks = names
-        .map((name, index) => ({
-          name: String(name).trim(),
-          qty: quantities[index] || '',
-          note: notes[index] || ''
-        }))
-        .filter((task) => task.name);
-
-      if (!tasks.length) {
-        toast('أدخل مهمة واحدة على الأقل.', true);
-        return;
-      }
+      const tasks = names.map((name, index) => ({
+        name: String(name).trim(),
+        qty: quantities[index] || '',
+        note: notes[index] || ''
+      })).filter((task) => task.name);
 
       const payload = {
         employee_id: employee.id,
@@ -989,37 +544,20 @@
         status: 'مكتمل'
       };
 
-      submitButton.disabled = true;
-      submitButton.textContent = 'جارٍ حفظ التقرير...';
+      const { error: saveError } = await supabase
+        .from('reports')
+        .insert(payload);
 
-      try {
-        const { error: insertError } = await supabase
-          .from('reports')
-          .insert(payload);
-
-        if (insertError) {
-          toast('لم يتم حفظ التقرير: ' + insertError.message, true);
-          return;
-        }
-
-        toast('تم حفظ التقرير اليومي بنجاح.');
-        await renderReport();
-
-      } catch (error) {
-        console.error('Save report error:', error);
-        toast('حدث خطأ أثناء حفظ التقرير.', true);
-      } finally {
-        const currentButton = $('#reportForm button[type="submit"]');
-
-        if (currentButton) {
-          currentButton.disabled = false;
-          currentButton.textContent = 'حفظ التقرير ▣';
-        }
+      if (saveError) {
+        toast('لم يتم حفظ التقرير: ' + saveError.message, true);
+        return;
       }
+
+      toast('تم حفظ التقرير بنجاح.');
+      await renderReport();
     };
   }
 
-  // الشكاوى
   async function renderComplaints() {
     let query = supabase
       .from('complaints')
@@ -1029,16 +567,15 @@
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (employee.role !== 'admin') {
+    if (!isManager()) {
       query = query.eq('employee_id', employee.id);
     }
 
     const { data, error } = await query;
-
     if (error) throw error;
 
     pageContent.innerHTML = `
-      ${heading('الشكاوى', 'متابعة الشكاوى وحالاتها')}
+      ${heading('الشكاوى والمقترحات', 'تقديم الشكاوى ومتابعة حالتها')}
 
       <div class="panel form-panel">
         <h3>تقديم شكوى جديدة</h3>
@@ -1057,178 +594,128 @@
           </label>
 
           <label>
-            العنوان المختصر
-            <input
-              name="title"
-              required
-              placeholder="اكتب عنوان الشكوى"
-            >
+            العنوان
+            <input name="title" required>
           </label>
 
           <label>
-            تفاصيل الشكوى
-            <textarea
-              name="details"
-              required
-              placeholder="اكتب تفاصيل الشكوى بوضوح"
-            ></textarea>
+            التفاصيل
+            <textarea name="details" required></textarea>
           </label>
 
           <button class="btn primary full" type="submit">
-            إرسال الشكوى ➤
+            إرسال الشكوى
           </button>
         </form>
       </div>
 
       <div class="list">
-        ${(data || []).map((item) => `
-          <div class="complaint-row">
-            <div class="complaint-main">
-              <b>${esc(item.title)}</b>
+        ${
+          (data || []).map((item) => `
+            <div class="complaint-row">
+              <div class="complaint-main">
+                <b>${esc(item.title)}</b>
 
-              <small>
-                ${esc(item.kind)} ·
-                ${esc((item.created_at || '').slice(0, 10))}
+                <small>
+                  ${esc(item.kind)} ·
+                  ${esc((item.created_at || '').slice(0, 10))}
+                  ${
+                    isManager() && item.employees
+                      ? ' · ' + esc(item.employees.name) +
+                        ' (' + esc(item.employees.code) + ')'
+                      : ''
+                  }
+                </small>
 
-                ${
-                  employee.role === 'admin' && item.employees
-                    ? ` · ${esc(item.employees.name)} (${esc(item.employees.code)})`
-                    : ''
-                }
-              </small>
+                <p>${esc(item.details)}</p>
+              </div>
 
-              <p>${esc(item.details)}</p>
+              <span class="pill ${
+                item.status === 'تم الحل'
+                  ? 'done'
+                  : item.status === 'مرفوضة'
+                    ? 'rejected'
+                    : 'review'
+              }">
+                ${esc(item.status)}
+              </span>
+
+              ${
+                isManager()
+                  ? `<select data-status-id="${esc(item.id)}">
+                      <option ${item.status === 'قيد المراجعة' ? 'selected' : ''}>
+                        قيد المراجعة
+                      </option>
+                      <option ${item.status === 'تم الحل' ? 'selected' : ''}>
+                        تم الحل
+                      </option>
+                      <option ${item.status === 'مرفوضة' ? 'selected' : ''}>
+                        مرفوضة
+                      </option>
+                    </select>`
+                  : ''
+              }
             </div>
-
-            <span class="pill ${
-              item.status === 'تم الحل'
-                ? 'done'
-                : item.status === 'مرفوضة'
-                  ? 'rejected'
-                  : 'review'
-            }">
-              ${esc(item.status || 'قيد المراجعة')}
-            </span>
-
-            ${
-              employee.role === 'admin'
-                ? `
-                  <select data-status-id="${esc(item.id)}">
-                    <option value="قيد المراجعة" ${
-                      item.status === 'قيد المراجعة' ? 'selected' : ''
-                    }>قيد المراجعة</option>
-
-                    <option value="تم الحل" ${
-                      item.status === 'تم الحل' ? 'selected' : ''
-                    }>تم الحل</option>
-
-                    <option value="مرفوضة" ${
-                      item.status === 'مرفوضة' ? 'selected' : ''
-                    }>مرفوضة</option>
-                  </select>
-                `
-                : ''
-            }
-          </div>
-        `).join('') ||
-        '<div class="empty">لا توجد شكاوى حتى الآن.</div>'}
+          `).join('') ||
+          '<div class="empty">لا توجد شكاوى حتى الآن.</div>'
+        }
       </div>
     `;
 
     $('#complaintForm').onsubmit = async (event) => {
       event.preventDefault();
 
-      const form = event.currentTarget;
-      const submitButton = form.querySelector('button[type="submit"]');
-      const formData = new FormData(form);
+      const formData = new FormData(event.currentTarget);
 
-      submitButton.disabled = true;
-      submitButton.textContent = 'جارٍ إرسال الشكوى...';
+      const { error: saveError } = await supabase
+        .from('complaints')
+        .insert({
+          employee_id: employee.id,
+          kind: formData.get('kind'),
+          title: String(formData.get('title')).trim(),
+          details: String(formData.get('details')).trim(),
+          status: 'قيد المراجعة',
+          attachment_paths: []
+        });
 
-      try {
-        const { error: insertError } = await supabase
-          .from('complaints')
-          .insert({
-            employee_id: employee.id,
-            kind: formData.get('kind'),
-            title: String(formData.get('title')).trim(),
-            details: String(formData.get('details')).trim(),
-            status: 'قيد المراجعة',
-            attachment_paths: []
-          });
-
-        if (insertError) {
-          toast('لم يتم إرسال الشكوى: ' + insertError.message, true);
-          return;
-        }
-
-        toast('تم إرسال الشكوى بنجاح.');
-        await renderComplaints();
-
-      } catch (error) {
-        console.error('Submit complaint error:', error);
-        toast('حدث خطأ أثناء إرسال الشكوى.', true);
-      } finally {
-        const currentButton = $('#complaintForm button[type="submit"]');
-
-        if (currentButton) {
-          currentButton.disabled = false;
-          currentButton.textContent = 'إرسال الشكوى ➤';
-        }
+      if (saveError) {
+        toast('تعذر إرسال الشكوى: ' + saveError.message, true);
+        return;
       }
+
+      toast('تم إرسال الشكوى بنجاح.');
+      await renderComplaints();
     };
 
     pageContent.querySelectorAll('[data-status-id]').forEach((select) => {
       select.onchange = async () => {
-        if (employee.role !== 'admin') return;
+        const { error: updateError } = await supabase
+          .from('complaints')
+          .update({
+            status: select.value,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', select.dataset.statusId);
 
-        select.disabled = true;
-
-        try {
-          const { error: updateError } = await supabase
-            .from('complaints')
-            .update({
-              status: select.value,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', select.dataset.statusId);
-
-          if (updateError) {
-            toast('تعذر تحديث الحالة: ' + updateError.message, true);
-            return;
-          }
-
-          toast('تم تحديث حالة الشكوى.');
-          await renderComplaints();
-
-        } catch (error) {
-          console.error('Update complaint error:', error);
-          toast('حدث خطأ أثناء تحديث حالة الشكوى.', true);
-        } finally {
-          select.disabled = false;
+        if (updateError) {
+          toast('تعذر تحديث الحالة: ' + updateError.message, true);
+          return;
         }
+
+        toast('تم تحديث حالة الشكوى.');
+        await renderComplaints();
       };
     });
   }
 
-  // لوحة الإدارة
   async function renderAdmin() {
-    if (employee.role !== 'admin') {
-      pageContent.innerHTML =
-        heading('غير مسموح') +
-        '<div class="panel">هذه الصفحة للمدير فقط.</div>';
-
-      return;
-    }
-
     const [employeesResult, reportsResult, complaintsResult] =
       await Promise.all([
         supabase
           .from('employees')
-          .select(
-            'id,code,name,branch,department,role,active',
-            { count: 'exact' }
-          )
+          .select('id,code,name,branch,department,role,active', {
+            count: 'exact'
+          })
           .order('code'),
 
         supabase
@@ -1247,15 +734,12 @@
     const complaints = complaintsResult.data || [];
 
     pageContent.innerHTML = `
-      ${heading(
-        'لوحة الإدارة المركزية',
-        'متابعة التقارير والشكاوى'
-      )}
+      ${heading('لوحة الإدارة المركزية', 'ملخص النظام')}
 
       <div class="stats-grid admin-stats">
         ${statsCard(
           'إجمالي الموظفين',
-          employeesResult.count ?? (employeesResult.data || []).length
+          employeesResult.count ?? 0
         )}
 
         ${statsCard(
@@ -1264,7 +748,7 @@
         )}
 
         ${statsCard(
-          'الشكاوى الجديدة',
+          'الشكاوى قيد المراجعة',
           complaints.filter(
             (item) => item.status === 'قيد المراجعة'
           ).length
@@ -1281,197 +765,637 @@
       <h3>الموظفون</h3>
 
       <div class="list">
-        ${(employeesResult.data || []).map((item) => `
-          <div class="list-row">
-            <div class="avatar">●</div>
+        ${
+          (employeesResult.data || []).map((item) => `
+            <div class="list-row">
+              <div class="grow">
+                <b>${esc(item.name)}</b>
+                <small>
+                  كود: ${esc(item.code)} ·
+                  ${esc(item.branch || '—')} ·
+                  ${esc(item.department || '')}
+                </small>
+              </div>
 
+              <span class="pill ${
+                item.active ? 'done' : 'rejected'
+              }">
+                ${item.active ? 'نشط' : 'غير نشط'}
+              </span>
+            </div>
+          `).join('') ||
+          '<div class="empty">لا توجد سجلات موظفين.</div>'
+        }
+      </div>
+
+      <button class="btn primary" id="openReports">
+        عرض تقارير الموظفين
+      </button>
+    `;
+
+    $('#openReports').onclick = () => {
+      currentPage = 'employeeReports';
+      renderPage(currentPage);
+    };
+  }
+
+  async function renderEmployees() {
+    if (!canManageEmployees()) {
+      throw new Error('إدارة الموظفين متاحة للمسؤول فقط.');
+    }
+
+    const { data, error } = await supabase
+      .from('employees')
+      .select('id,code,name,branch,department,role,active')
+      .order('code');
+
+    if (error) throw error;
+
+    const { data: reports, error: reportsError } = await supabase
+      .from('reports')
+      .select('employee_id,report_date')
+      .order('report_date', { ascending: false });
+
+    if (reportsError) throw reportsError;
+
+    const lastReport = {};
+
+    (reports || []).forEach((report) => {
+      if (!lastReport[report.employee_id]) {
+        lastReport[report.employee_id] = report.report_date;
+      }
+    });
+
+    pageContent.innerHTML = `
+      ${heading('إدارة الموظفين', 'إضافة موظفين والبحث في القائمة')}
+
+      <form id="newEmployeeForm" class="panel form-panel">
+        <h3>إضافة موظف جديد</h3>
+
+        <label>
+          اسم الموظف
+          <input name="name" required maxlength="150">
+        </label>
+
+        <div class="form-grid">
+          <label>
+            كود الموظف
+            <input name="code" required maxlength="50"
+              pattern="[a-zA-Z0-9._-]+">
+          </label>
+
+          <label>
+            الفرع
+            <input name="branch" maxlength="150">
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            القسم
+            <input name="department" maxlength="150">
+          </label>
+
+          <label>
+            الصلاحية
+            <select name="role">
+              <option value="employee">موظف</option>
+              <option value="manager">مدير تقارير</option>
+              <option value="admin">مسؤول النظام</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          كلمة مرور حساب الدخول
+          <input name="password" type="password"
+            minlength="8" autocomplete="new-password" required>
+        </label>
+
+        <p class="hint">
+          يجب أن تكون وظيفة create-employee منشأة ومؤمّنة في Supabase.
+        </p>
+
+        <button class="btn primary full" type="submit">
+          إنشاء الموظف وحساب الدخول
+        </button>
+      </form>
+
+      <h3>قائمة الموظفين</h3>
+
+      <input id="employeeSearch" class="search-input"
+        placeholder="ابحث بالاسم أو الكود أو الفرع">
+
+      <div id="employeeList" class="list"></div>
+    `;
+
+    const drawEmployees = () => {
+      const search = $('#employeeSearch').value.trim().toLowerCase();
+
+      $('#employeeList').innerHTML = (data || [])
+        .filter((item) =>
+          [item.name, item.code, item.branch, item.department]
+            .some((value) =>
+              String(value || '').toLowerCase().includes(search)
+            )
+        )
+        .map((item) => `
+          <div class="list-row">
             <div class="grow">
               <b>${esc(item.name)}</b>
-
               <small>
-                كود: ${esc(item.code)} ·
-                ${esc(item.branch || '—')} -
+                الكود: ${esc(item.code)} ·
+                ${esc(item.branch || '—')} ·
                 ${esc(item.department || '')}
+              </small>
+              <small>
+                آخر تقرير:
+                ${esc(lastReport[item.id] || 'لا يوجد')}
               </small>
             </div>
 
-            <span class="pill ${item.active ? 'done' : 'rejected'}">
+            <span class="pill ${
+              item.active ? 'done' : 'rejected'
+            }">
               ${item.active ? 'نشط' : 'غير نشط'}
             </span>
+
+            <span>${esc(item.role || 'employee')}</span>
           </div>
         `).join('') ||
-        '<div class="empty">لا توجد سجلات موظفين.</div>'}
-      </div>
+        '<div class="empty">لا توجد نتائج.</div>';
+    };
 
-      <p class="hint">
-        إضافة الموظفين وربط حساباتهم تتم من لوحة Supabase الإدارية
-        لضمان عدم كشف صلاحيات حساسة في المتصفح.
-      </p>
-    `;
+    $('#employeeSearch').addEventListener('input', drawEmployees);
+    drawEmployees();
+
+    $('#newEmployeeForm').onsubmit = async (event) => {
+      event.preventDefault();
+
+      const form = event.currentTarget;
+      const button = form.querySelector('button[type="submit"]');
+      const formData = new FormData(form);
+
+      const payload = {
+        name: String(formData.get('name') || '').trim(),
+        code: String(formData.get('code') || '').trim(),
+        branch: String(formData.get('branch') || '').trim(),
+        department: String(formData.get('department') || '').trim(),
+        role: String(formData.get('role') || 'employee'),
+        password: String(formData.get('password') || '')
+      };
+
+      if (payload.password.length < 8) {
+        toast('كلمة المرور يجب ألا تقل عن 8 أحرف.', true);
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'جارٍ إنشاء الحساب...';
+
+      try {
+        const { data: result, error: invokeError } =
+          await supabase.functions.invoke('create-employee', {
+            body: payload
+          });
+
+        if (invokeError) {
+          throw new Error(
+            'تعذر تنفيذ وظيفة إنشاء الموظف. راجع إعدادات Edge Function.'
+          );
+        }
+
+        if (!result?.success) {
+          throw new Error(result?.error || 'لم يتم إنشاء الموظف.');
+        }
+
+        toast('تم إنشاء الموظف بنجاح.');
+        form.reset();
+        await renderEmployees();
+      } catch (error) {
+        console.error(error);
+        toast(error.message || 'تعذر إنشاء الموظف.', true);
+      } finally {
+        const submitButton =
+          $('#newEmployeeForm')?.querySelector('button[type="submit"]');
+
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'إنشاء الموظف وحساب الدخول';
+        }
+      }
+    };
   }
 
-  // تقارير الموظفين
-  async function renderEmployees() {
-    if (employee.role !== 'admin') {
-      pageContent.innerHTML =
-        heading('غير مسموح') +
-        '<div class="panel">هذه الصفحة للمدير فقط.</div>';
-
-      return;
+  async function renderEmployeeReports() {
+    if (!isManager()) {
+      throw new Error('ليس لديك صلاحية عرض تقارير الموظفين.');
     }
 
     const [employeesResult, reportsResult] = await Promise.all([
       supabase
         .from('employees')
-        .select('id,code,name,branch,department,active')
-        .order('code'),
+        .select('id,code,name,branch,department')
+        .order('name'),
 
       supabase
         .from('reports')
-        .select('employee_id,report_date,status')
+        .select(
+          'id,employee_id,report_date,task_code,tasks,remaining,next_plan,obstacles,status,created_at'
+        )
         .order('report_date', { ascending: false })
+        .limit(5000)
     ]);
 
     if (employeesResult.error) throw employeesResult.error;
     if (reportsResult.error) throw reportsResult.error;
 
-    const lastReport = {};
+    const employees = employeesResult.data || [];
+    const employeeMap = new Map(
+      employees.map((item) => [item.id, item])
+    );
 
-    (reportsResult.data || []).forEach((report) => {
-      if (!lastReport[report.employee_id]) {
-        lastReport[report.employee_id] = report;
-      }
-    });
+    reportRows = (reportsResult.data || []).map((report) => ({
+      ...report,
+      employee: employeeMap.get(report.employee_id) || {}
+    }));
 
     pageContent.innerHTML = `
       ${heading(
         'تقارير الموظفين',
-        'متابعة الموظفين وآخر تقاريرهم'
+        'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير'
       )}
 
-      <input
-        id="employeeSearch"
-        class="search-input"
-        placeholder="ابحث بالاسم أو الكود أو الفرع..."
-      >
+      <div class="panel form-panel">
+        <div class="form-grid">
+          <label>
+            الموظف
+            <select id="filterEmployee">
+              <option value="">كل الموظفين</option>
+              ${employees.map((item) => `
+                <option value="${esc(item.id)}">
+                  ${esc(item.name)} - ${esc(item.code)}
+                </option>
+              `).join('')}
+            </select>
+          </label>
 
-      <div id="employeeList" class="list"></div>
+          <label>
+            من تاريخ
+            <input id="filterFrom" type="date">
+          </label>
+
+          <label>
+            إلى تاريخ
+            <input id="filterTo" type="date" value="${dateToday()}">
+          </label>
+        </div>
+
+        <button class="btn primary" id="applyReportFilters">
+          عرض التقارير
+        </button>
+
+        <button class="outline" id="exportReports">
+          تصدير CSV لبرنامج Excel
+        </button>
+
+        <button class="outline" id="printReports">
+          طباعة التقارير
+        </button>
+      </div>
+
+      <div id="reportSummary" class="stats-grid"></div>
+      <div id="employeeReportsList" class="list"></div>
     `;
 
-    const draw = () => {
-      const search = $('#employeeSearch').value
-        .trim()
-        .toLowerCase();
+    $('#applyReportFilters').onclick = drawReports;
+    $('#exportReports').onclick = exportReportsCSV;
+    $('#printReports').onclick = printReports;
 
-      $('#employeeList').innerHTML =
-        (employeesResult.data || [])
-          .filter((item) =>
-            [
-              item.name,
-              item.code,
-              item.branch,
-              item.department
-            ].some((value) =>
-              String(value || '').toLowerCase().includes(search)
-            )
-          )
-          .map((item) => {
-            const report = lastReport[item.id];
-
-            return `
-              <div class="list-row">
-                <div class="avatar">●</div>
-
-                <div class="grow">
-                  <b>${esc(item.name)}</b>
-
-                  <small>
-                    كود: ${esc(item.code)} ·
-                    ${esc(item.branch || '—')} -
-                    ${esc(item.department || '')}
-                  </small>
-
-                  <small>
-                    آخر تقرير:
-                    ${esc(report?.report_date || 'لا يوجد تقرير')}
-                  </small>
-                </div>
-
-                <span class="pill ${report ? 'done' : 'review'}">
-                  ${esc(report?.status || 'لا يوجد تقرير')}
-                </span>
-              </div>
-            `;
-          })
-          .join('') ||
-        '<div class="empty">لا توجد نتائج.</div>';
-    };
-
-    $('#employeeSearch').oninput = draw;
-    draw();
+    drawReports();
   }
 
-  // بدء التطبيق واستعادة الجلسة السابقة
-  async function startApp() {
-    if (!loginView || !appView || !pageContent) {
-      console.error(
-        'Required HTML elements are missing:',
-        {
-          loginView: Boolean(loginView),
-          appView: Boolean(appView),
-          pageContent: Boolean(pageContent)
-        }
+  function filteredReports() {
+    const selectedEmployee = $('#filterEmployee')?.value || '';
+    const from = $('#filterFrom')?.value || '';
+    const to = $('#filterTo')?.value || '';
+
+    return reportRows.filter((report) => {
+      if (selectedEmployee &&
+          report.employee_id !== selectedEmployee) {
+        return false;
+      }
+
+      if (from && report.report_date < from) return false;
+      if (to && report.report_date > to) return false;
+
+      return true;
+    });
+  }
+
+  function drawReports() {
+    const rows = filteredReports();
+
+    $('#reportSummary').innerHTML =
+      statsCard('عدد التقارير', rows.length) +
+      statsCard(
+        'عدد الموظفين',
+        new Set(rows.map((row) => row.employee_id)).size
       );
 
-      toast(
-        'بعض عناصر الصفحة غير موجودة. تأكد من استخدام index.html الصحيح.',
-        true
-      );
+    $('#employeeReportsList').innerHTML = rows.map((report) => {
+      const employeeInfo = report.employee || {};
+      const tasks = Array.isArray(report.tasks) ? report.tasks : [];
 
+      return `
+        <article class="panel report-detail">
+          <h3>${esc(employeeInfo.name || 'موظف')}</h3>
+
+          <p>
+            الكود: ${esc(employeeInfo.code || '—')} ·
+            الفرع: ${esc(employeeInfo.branch || '—')}
+          </p>
+
+          <p>
+            التاريخ: ${esc(report.report_date)} ·
+            رمز المهمة: ${esc(report.task_code || '—')}
+          </p>
+
+          <p>الحالة: ${esc(report.status || '—')}</p>
+
+          <h4>المهام المنفذة</h4>
+
+          ${
+            tasks.length
+              ? `<ul>${tasks.map((task) => `
+                  <li>
+                    ${esc(task.name || '')}
+                    — الكمية: ${esc(task.qty || '—')}
+                    — ${esc(task.note || '')}
+                  </li>
+                `).join('')}</ul>`
+              : '<p>لا توجد تفاصيل مهام.</p>'
+          }
+
+          <h4>ما لم يتم</h4>
+          <p>${esc(report.remaining || '—')}</p>
+
+          <h4>خطة اليوم القادم</h4>
+          <p>${esc(report.next_plan || '—')}</p>
+
+          <h4>المعوقات</h4>
+          <p>${esc(report.obstacles || '—')}</p>
+        </article>
+      `;
+    }).join('') || '<div class="empty">لا توجد تقارير في الفترة المحددة.</div>';
+  }
+
+  function csvCell(value) {
+    let text = String(value ?? '');
+
+    // حماية من تفسير المحتوى كنص قابل للتنفيذ داخل برامج الجداول.
+    if (/^[=+\-@\t\r]/.test(text)) {
+      text = "'" + text;
+    }
+
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+
+  function exportReportsCSV() {
+    const rows = filteredReports();
+
+    if (!rows.length) {
+      toast('لا توجد تقارير لتصديرها.', true);
       return;
     }
 
-    if (!initClient()) {
-      showLogin();
+    const columns = [
+      'اسم الموظف',
+      'كود الموظف',
+      'الفرع',
+      'القسم',
+      'تاريخ التقرير',
+      'رمز المهمة',
+      'المهام المنفذة',
+      'ما لم يتم',
+      'خطة اليوم القادم',
+      'المعوقات',
+      'الحالة'
+    ];
+
+    const csvRows = rows.map((report) => {
+      const employeeInfo = report.employee || {};
+      const tasks = Array.isArray(report.tasks)
+        ? report.tasks.map((task) =>
+            `${task.name || ''} (الكمية: ${task.qty || ''}; ${task.note || ''})`
+          ).join(' | ')
+        : '';
+
+      return [
+        employeeInfo.name,
+        employeeInfo.code,
+        employeeInfo.branch,
+        employeeInfo.department,
+        report.report_date,
+        report.task_code,
+        tasks,
+        report.remaining,
+        report.next_plan,
+        report.obstacles,
+        report.status
+      ];
+    });
+
+    const csv = '\uFEFF' +
+      [columns, ...csvRows]
+        .map((row) => row.map(csvCell).join(','))
+        .join('\r\n');
+
+    const blob = new Blob([csv], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `تقارير_الموظفين_${dateToday()}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+    toast('تم تصدير التقارير. يمكنك فتح الملف في Excel.');
+  }
+
+  function printReports() {
+    const rows = filteredReports();
+
+    if (!rows.length) {
+      toast('لا توجد تقارير للطباعة.', true);
       return;
     }
 
-    try {
-      const {
-        data,
-        error
-      } = await supabase.auth.getSession();
+    const printable = rows.map((report) => {
+      const employeeInfo = report.employee || {};
+      const tasks = Array.isArray(report.tasks)
+        ? report.tasks.map((task) =>
+            `<li>${esc(task.name)} — ${esc(task.qty || '—')} — ${esc(task.note || '')}</li>`
+          ).join('')
+        : '';
+
+      return `
+        <article style="border:1px solid #ccc;padding:16px;margin:12px 0;page-break-inside:avoid">
+          <h2>${esc(employeeInfo.name || 'موظف')}</h2>
+          <p>الكود: ${esc(employeeInfo.code || '—')}</p>
+          <p>الفرع: ${esc(employeeInfo.branch || '—')}</p>
+          <p>التاريخ: ${esc(report.report_date)}</p>
+          <p>رمز المهمة: ${esc(report.task_code || '—')}</p>
+          <h3>المهام المنفذة</h3>
+          <ul>${tasks || '<li>لا توجد تفاصيل مهام</li>'}</ul>
+          <p><b>ما لم يتم:</b> ${esc(report.remaining || '—')}</p>
+          <p><b>خطة اليوم القادم:</b> ${esc(report.next_plan || '—')}</p>
+          <p><b>المعوقات:</b> ${esc(report.obstacles || '—')}</p>
+          <p><b>الحالة:</b> ${esc(report.status || '—')}</p>
+        </article>
+      `;
+    }).join('');
+
+    const win = window.open('', '_blank');
+
+    if (!win) {
+      toast('اسمح بفتح النوافذ المنبثقة للطباعة.', true);
+      return;
+    }
+
+    win.document.write(`
+      <!doctype html>
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="utf-8">
+        <title>تقارير الموظفين</title>
+      </head>
+      <body style="font-family:Arial,sans-serif;direction:rtl">
+        <h1>تقارير الموظفين</h1>
+        ${printable}
+        <script>
+          window.onload = function () {
+            window.print();
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+
+    win.document.close();
+  }
+
+  function renderPassword() {
+    pageContent.innerHTML = `
+      ${heading('تغيير كلمة المرور', 'تحديث كلمة مرور حسابك')}
+
+      <form id="passwordForm" class="panel form-panel">
+        <label>
+          كلمة المرور الجديدة
+          <input name="password" type="password"
+            minlength="8" autocomplete="new-password" required>
+        </label>
+
+        <label>
+          تأكيد كلمة المرور
+          <input name="confirmPassword" type="password"
+            minlength="8" autocomplete="new-password" required>
+        </label>
+
+        <button class="btn primary full" type="submit">
+          تحديث كلمة المرور
+        </button>
+      </form>
+    `;
+
+    $('#passwordForm').onsubmit = async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(event.currentTarget);
+      const password = String(formData.get('password') || '');
+      const confirmPassword = String(
+        formData.get('confirmPassword') || ''
+      );
+
+      if (password.length < 8) {
+        toast('كلمة المرور يجب ألا تقل عن 8 أحرف.', true);
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast('كلمتا المرور غير متطابقتين.', true);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
-        console.error('Get session error:', error);
-        toast('تعذر استعادة جلسة الدخول: ' + error.message, true);
+        toast('تعذر تحديث كلمة المرور: ' + error.message, true);
+        return;
+      }
+
+      // سجل التغيير اختياري حسب إعداد الجدول وسياسات RLS.
+      try {
+        await supabase.from('password_change_log').insert({
+          employee_id: employee.id,
+          changed_at: new Date().toISOString()
+        });
+      } catch (error) {
+        console.warn('لم يتم تسجيل تغيير كلمة المرور.', error);
+      }
+
+      toast('تم تحديث كلمة المرور.');
+      event.currentTarget.reset();
+    };
+  }
+
+  async function renderPasswordLog() {
+    const { data, error } = await supabase
+      .from('password_change_log')
+      .select('*')
+      .order('changed_at', { ascending: false })
+      .limit(100);
+
+    if (error) throw error;
+
+    pageContent.innerHTML = `
+      ${heading('سجل تغييرات كلمات المرور', 'آخر 100 سجل')}
+
+      <div class="list">
+        ${
+          (data || []).map((item) => `
+            <div class="list-row">
+              <div>
+                <b>رقم الموظف: ${esc(item.employee_id || '—')}</b>
+                <small>${esc(item.changed_at || '—')}</small>
+              </div>
+            </div>
+          `).join('') ||
+          '<div class="empty">لا توجد سجلات.</div>'
+        }
+      </div>
+    `;
+  }
+
+  if (initClient()) {
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      if (error) {
         showLogin();
         return;
       }
 
-      if (data?.session) {
-        const loaded = await loadEmployee();
-
-        if (loaded) {
-          showApp();
-          return;
-        }
+      if (data.session && await loadEmployee()) {
+        showApp();
+      } else {
+        showLogin();
       }
-
-      showLogin();
-
-    } catch (error) {
-      console.error('Application startup error:', error);
-
-      toast(
-        'تعذر تشغيل التطبيق: ' +
-        (error?.message || 'خطأ غير معروف'),
-        true
-      );
-
-      showLogin();
-    }
+    });
   }
-
-  startApp();
 })();
+```
