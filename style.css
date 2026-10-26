@@ -742,3 +742,34 @@ footer{
 .login-card .brand-logo {
   z-index: 1;
 }
+
+/* زر تسجيل الخروج */
+#logoutBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 120px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #00643f;
+  border: 1px solid #e5cf22;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#logoutBtn:hover {
+  background: #e4f5eb;
+}
+
+/* تنسيق الزر على الموبايل */
+@media (max-width: 520px) {
+  #logoutBtn {
+    min-width: auto;
+    font-size: 12px;
+    padding: 7px 8px;
+  }
+}
