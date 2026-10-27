@@ -626,3 +626,30 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     display: flex;
   }
 }
+
+/* إصلاح ظهور زر القائمة */
+.menu-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 10001;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  color: #fff !important;
+  background: #075b42 !important;
+  border: 1px solid #ffffff80;
+  border-radius: 10px;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+/* ظهور القائمة الجانبية عند فتحها */
+.sidebar.open {
+  transform: translateX(0) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
