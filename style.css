@@ -542,3 +542,50 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     padding: 18px 20px;
   }
 }
+
+/* ألوان كروت الاختصارات في الصفحة الرئيسية */
+#pageContent .quick-actions,
+#pageContent .quick-links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+#pageContent .quick-actions a,
+#pageContent .quick-links a,
+#pageContent .quick-actions button,
+#pageContent .quick-links button {
+  background: linear-gradient(135deg, #ffffff 0%, #edf7f0 100%);
+  color: #063d30;
+  border: 1px solid #cfe5d6;
+  border-right: 4px solid #0b8a61;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(6, 61, 48, 0.07);
+  transition: background .2s ease, transform .2s ease,
+              box-shadow .2s ease;
+}
+
+#pageContent .quick-actions a:hover,
+#pageContent .quick-links a:hover,
+#pageContent .quick-actions button:hover,
+#pageContent .quick-links button:hover {
+  background: linear-gradient(135deg, #e2f3e9 0%, #fff9d9 100%);
+  border-right-color: #d5b800;
+  box-shadow: 0 7px 18px rgba(6, 61, 48, 0.12);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+  #pageContent .quick-actions,
+  #pageContent .quick-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  #pageContent .quick-actions,
+  #pageContent .quick-links {
+    grid-template-columns: 1fr;
+  }
+}
