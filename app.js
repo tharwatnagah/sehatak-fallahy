@@ -310,13 +310,75 @@
     });
   }
 
-  // فتح القائمة الجانبية
+   // فتح وإغلاق القائمة الجانبية
   const menuToggle = $('#menuToggle');
+  const sidebar = $('#sidebar');
 
-  if (menuToggle) {
-    menuToggle.addEventListener('click', () => {
-      $('#sidebar')?.classList.toggle('open');
+  function closeSidebar() {
+    if (!sidebar || !menuToggle) return;
+
+    sidebar.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-label', 'فتح القائمة');
+  }
+
+  function toggleSidebar() {
+    if (!sidebar || !menuToggle) return;
+
+    const isOpen = sidebar.classList.toggle('open');
+
+    menuToggle.setAttribute('aria-expanded', String(isOpen));
+    menuToggle.setAttribute(
+      'aria-label',
+      isOpen ? 'إغلاق القائمة' : 'فتح القائمة'
+    );
+  }
+
+  if (menuToggle && sidebar) {
+    menuToggle.setAttribute('aria-expanded', 'false');
+
+    menuToggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleSidebar();
     });
+
+    // إغلاق القائمة عند الضغط خارجها على الشاشات الصغيرة
+    document.addEventListener('click', (event) => {
+      if (window.innerWidth > 768) return;
+      if (!sidebar.classList.contains('open')) return;
+
+      if (
+        !sidebar.contains(event.target) &&
+        !menuToggle.contains(event.target)
+      ) {
+        closeSidebar();
+      }
+    });
+
+    // إغلاق القائمة بزر Escape
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeSidebar();
+      }
+    });
+
+    // إغلاق القائمة بعد اختيار صفحة على الموبايل
+    sidebar.querySelectorAll('.nav-item').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          closeSidebar();
+        }
+      });
+    });
+
+    // إغلاق القائمة عند الانتقال إلى شاشة كبيرة
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        closeSidebar();
+      }
+    });
+  }
   }
 
   // التنقل بين الصفحات
