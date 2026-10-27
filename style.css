@@ -186,3 +186,32 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     text-align: right;
   }
 }
+/* تثبيت اللوجو والجملة في أقصى اليمين */
+.topbar {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  direction: rtl !important;
+  gap: 16px;
+}
+
+.topbar-brand {
+  order: -1 !important;
+  margin: 0 !important;
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* زر القائمة ناحية اليمين */
+#menuToggle {
+  order: -2 !important;
+  margin: 0 !important;
+}
+
+/* اسم الموظف وزر الخروج ناحية الشمال */
+.topbar-actions {
+  order: 1 !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
