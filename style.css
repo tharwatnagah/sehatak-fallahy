@@ -687,3 +687,49 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     z-index: 1001;
   }
 }
+
+/* إصلاح القائمة الجانبية على الموبايل */
+@media screen and (max-width: 768px) {
+  #sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: auto !important;
+    bottom: 0 !important;
+
+    width: 280px !important;
+    max-width: 85vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+
+    margin: 0 !important;
+    z-index: 1000 !important;
+
+    transform: translateX(100%) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    transition:
+      transform 0.25s ease,
+      visibility 0.25s ease !important;
+  }
+
+  #sidebar.open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  #appView {
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  #menuToggle {
+    position: relative;
+    z-index: 1001;
+  }
+}
