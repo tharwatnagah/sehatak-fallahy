@@ -94,3 +94,57 @@ input:focus,select:focus,textarea:focus{border-color:var(--green-700);box-shadow
 /* Tables */
 table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
 th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
+/* إصلاح ظهور زر تسجيل الخروج */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topbar-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#logoutBtn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 1000;
+  min-height: 42px;
+  padding: 10px 18px;
+  color: #fff !important;
+  background: #075b42 !important;
+  border: 1px solid #075b42 !important;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#logoutBtn:hover {
+  background: #064532 !important;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  #logoutBtn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
