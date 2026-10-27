@@ -148,70 +148,61 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     font-size: 12px;
   }
 }
-/* نقل اللوجو وجملة رجعنالك عافية زمان إلى اليمين */
+/* ترتيب الهيدر: القائمة يمين، اللوجو والجملة بعدها، والخروج شمال */
 .topbar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.topbar-brand {
-  order: 1;
-  margin-right: auto;
-  margin-left: 0;
-  text-align: right;
-}
-
-.topbar-actions {
-  order: 2;
-  margin-right: auto;
-  margin-left: 0;
+  display: flex !important;
+  flex-direction: row !important;
+  direction: rtl !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 16px;
 }
 
 #menuToggle {
-  order: 3;
-  margin-right: 0;
-  margin-left: 0;
+  order: 1 !important;
+  margin: 0 !important;
+  flex: 0 0 42px;
 }
 
-/* ضبط ترتيب العناصر في الشاشات الصغيرة */
+.topbar-brand {
+  order: 2 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 15px;
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.topbar-actions {
+  order: 3 !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+}
+
+#logoutBtn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 @media (max-width: 760px) {
   .topbar {
     flex-wrap: wrap;
   }
 
   .topbar-brand {
-    margin-right: auto;
-    text-align: right;
+    gap: 8px;
   }
-}
-/* تثبيت اللوجو والجملة في أقصى اليمين */
-.topbar {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  align-items: center !important;
-  direction: rtl !important;
-  gap: 16px;
-}
 
-.topbar-brand {
-  order: -1 !important;
-  margin: 0 !important;
-  text-align: right !important;
-  direction: rtl !important;
-}
+  .topbar-brand strong {
+    font-size: 18px;
+  }
 
-/* زر القائمة ناحية اليمين */
-#menuToggle {
-  order: -2 !important;
-  margin: 0 !important;
-}
-
-/* اسم الموظف وزر الخروج ناحية الشمال */
-.topbar-actions {
-  order: 1 !important;
-  margin-right: auto !important;
-  margin-left: 0 !important;
+  .topbar-brand span {
+    font-size: 14px;
+  }
 }
