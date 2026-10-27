@@ -344,3 +344,201 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     min-height: 105px;
   }
 }
+
+/* ===== تحسين تصميم الصفحة الرئيسية فقط ===== */
+#pageContent .page-heading {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 32px;
+  min-height: 150px;
+  border: 1px solid #dceadf;
+  border-right: 5px solid #0b8a61;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 0% 100%, #f2d21c24, transparent 38%),
+    linear-gradient(120deg, #ffffff, #edf6ef);
+  box-shadow: 0 8px 24px rgba(6, 61, 48, .05);
+}
+
+#pageContent .page-heading h1 {
+  font-size: 30px;
+  letter-spacing: -.5px;
+}
+
+#pageContent .page-heading p {
+  color: #607b6c;
+  margin: 8px 0 0;
+}
+
+/* منطقة الترحيب */
+.welcome-card {
+  position: relative;
+  padding: 22px 25px;
+  margin: 14px 0 24px;
+  border: 1px solid #dceae0;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #fffef5, #edf7ef);
+  box-shadow: 0 5px 18px rgba(6, 61, 48, .04);
+}
+
+.welcome-card h2 {
+  margin: 0 0 8px !important;
+  font-size: 23px !important;
+  color: #075b42 !important;
+}
+
+.welcome-card p {
+  margin: 4px 0;
+  color: #365e4b;
+}
+
+.welcome-card small {
+  color: #6c8178;
+}
+
+/* الاختصارات: بطاقات مرتبة بألوان البراند */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 32px;
+}
+
+#pageContent .quick-grid .quick {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 100px;
+  padding: 18px 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  text-align: right;
+  white-space: normal;
+  line-height: 1.8;
+  color: #075b42;
+  background: linear-gradient(145deg, #fff, #f3f8f3);
+  border: 1px solid #dce9df;
+  border-radius: 15px;
+  box-shadow: 0 5px 16px rgba(6, 61, 48, .045);
+  transition: transform .2s ease, box-shadow .2s ease,
+              border-color .2s ease;
+}
+
+#pageContent .quick-grid .quick::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  right: 0;
+  width: 4px;
+  border-radius: 5px;
+  background: #0b8a61;
+}
+
+#pageContent .quick-grid .quick:hover {
+  transform: translateY(-3px);
+  border-color: #a9d3b8;
+  box-shadow: 0 10px 24px rgba(6, 61, 48, .10);
+  background: linear-gradient(145deg, #fffef5, #e8f5eb);
+}
+
+#pageContent .quick-grid .quick b {
+  color: #064532;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+#pageContent .quick-grid .quick small {
+  color: #708378;
+  font-size: 12px;
+}
+
+/* عنوان الإحصائيات */
+#pageContent h3 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+/* بطاقات الإحصائيات */
+#pageContent .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0 30px;
+}
+
+#pageContent .stats-grid .stat {
+  position: relative;
+  min-width: 0;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 23px 22px;
+  overflow: hidden;
+  border: 1px solid #dce9df;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #ffffff 55%, #f0f8f1);
+  box-shadow: 0 7px 22px rgba(6, 61, 48, .055);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+#pageContent .stats-grid .stat::before {
+  top: 15px;
+  bottom: 15px;
+  width: 5px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0b8a61, #075b42);
+}
+
+#pageContent .stats-grid .stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 26px rgba(6, 61, 48, .09);
+}
+
+#pageContent .stats-grid .stat > span {
+  color: #627b6d;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+#pageContent .stats-grid .stat > b {
+  margin-top: 9px;
+  color: #064532;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+/* الشاشات المتوسطة */
+@media (max-width: 1100px) {
+  .quick-grid,
+  #pageContent .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* الموبايل */
+@media (max-width: 600px) {
+  .welcome-card {
+    padding: 17px;
+  }
+
+  .quick-grid,
+  #pageContent .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+
+  #pageContent .quick-grid .quick {
+    min-height: 78px;
+    padding: 14px 17px;
+  }
+
+  #pageContent .stats-grid .stat {
+    min-height: 110px;
+    padding: 18px 20px;
+  }
+}
