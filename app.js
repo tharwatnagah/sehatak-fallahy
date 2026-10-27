@@ -247,17 +247,28 @@
     return true;
   }
 
-  // تسجيل الدخول
-  const loginForm = $('#loginForm');
+  // تسجيل الدخول - معالجة إرسال النموذج على الموبايل والكمبيوتر
+  const loginForm = document.getElementById('loginForm');
 
   if (loginForm) {
+    // منع المتصفح من إعادة تحميل الصفحة عند إرسال النموذج
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      event.stopPropagation();
+
+      const submitButton = loginForm.querySelector(
+        'button[type="submit"], input[type="submit"]'
+      );
+
+      if (submitButton?.disabled) return;
 
       if (!initClient()) return;
 
-      const code = $('#loginCode')?.value.trim();
-      const password = $('#loginPassword')?.value;
+      const codeInput = document.getElementById('loginCode');
+      const passwordInput = document.getElementById('loginPassword');
+
+      const code = codeInput?.value.trim();
+      const password = passwordInput?.value;
 
       if (!code || !password) {
         toast('اكتب كود الموظف وكلمة المرور.', true);
@@ -267,6 +278,11 @@
       const email = code.includes('@')
         ? code
         : code + '@sehatak-fallahy.local';
+
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'جارٍ تسجيل الدخول...';
+      }
 
       try {
         const { error } = await supabase.auth.signInWithPassword({
@@ -280,20 +296,42 @@
           return;
         }
 
-        if (await loadEmployee()) {
-          currentPage = hasPermission('home')
-            ? 'home'
-            : Object.keys(PAGE_PERMISSIONS).find((page) => hasPermission(page));
+        const employeeLoaded = await loadEmployee();
 
-          showApp();
-        } else {
+        if (!employeeLoaded) {
           showLogin();
+          return;
         }
+
+        currentPage = hasPermission('home')
+          ? 'home'
+          : Object.keys(PAGE_PERMISSIONS).find((page) =>
+              hasPermission(page)
+            );
+
+        if (!currentPage) {
+          toast('حسابك لا يملك صلاحية الوصول لأي صفحة.', true);
+          showLogin();
+          return;
+        }
+
+        showApp();
+
       } catch (error) {
         console.error('Unexpected login error:', error);
-        toast('حدث خطأ أثناء تسجيل الدخول. راجع Console.', true);
+        toast(
+          'حدث خطأ أثناء تسجيل الدخول. حاول مرة أخرى.',
+          true
+        );
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = 'تسجيل الدخول';
+        }
       }
-    });
+    }, true);
+  } else {
+    console.error('لم يتم العثور على نموذج الدخول: loginForm');
   }
 
   // تسجيل الخروج
