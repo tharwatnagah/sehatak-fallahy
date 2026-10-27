@@ -643,3 +643,271 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     overflow-x: clip;
   }
 }
+
+/* ===== تحسين شامل لواجهة الموبايل ===== */
+@media screen and (max-width: 600px) {
+
+  /* الهيدر */
+  .topbar {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+  }
+
+  #menuToggle,
+  .menu-toggle {
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    font-size: 24px !important;
+    border-radius: 12px !important;
+  }
+
+  .topbar-brand {
+    flex: 1 1 calc(100% - 60px) !important;
+    min-width: 0 !important;
+    gap: 7px !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+  }
+
+  .topbar-brand strong {
+    font-size: 19px !important;
+    padding: 3px 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .topbar-brand span {
+    font-size: 14px !important;
+    white-space: normal !important;
+  }
+
+  .topbar-actions {
+    width: 100% !important;
+    margin: 0 !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  #headerEmployeeName {
+    font-size: 13px !important;
+  }
+
+  #logoutBtn {
+    min-height: 38px !important;
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* مساحة المحتوى */
+  .app-layout {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px 12px 24px !important;
+  }
+
+  #pageContent {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* عنوان الصفحة */
+  #pageContent .page-heading {
+    min-height: auto !important;
+    padding: 20px 17px !important;
+    margin-bottom: 16px !important;
+    border-radius: 16px !important;
+    border-right-width: 4px !important;
+  }
+
+  #pageContent .page-heading h1 {
+    font-size: 25px !important;
+    line-height: 1.5 !important;
+    margin: 0 0 5px !important;
+  }
+
+  #pageContent .page-heading p {
+    font-size: 14px !important;
+    margin: 4px 0 0 !important;
+  }
+
+  /* بطاقة الترحيب */
+  .welcome-card {
+    padding: 18px !important;
+    margin: 12px 0 20px !important;
+    border-radius: 16px !important;
+  }
+
+  .welcome-card h2 {
+    font-size: 21px !important;
+    line-height: 1.6 !important;
+  }
+
+  .welcome-card p {
+    font-size: 14px !important;
+  }
+
+  .welcome-card small {
+    font-size: 12px !important;
+  }
+
+  /* الاختصارات والإحصائيات */
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 15px 0 24px !important;
+  }
+
+  #pageContent .quick-grid .quick {
+    min-height: 90px !important;
+    padding: 12px !important;
+    border-radius: 13px !important;
+    align-items: flex-start !important;
+  }
+
+  #pageContent .quick-grid .quick b {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+  }
+
+  #pageContent .quick-grid .quick small {
+    font-size: 11px !important;
+    line-height: 1.6 !important;
+  }
+
+  #pageContent .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 15px 0 24px !important;
+  }
+
+  #pageContent .stats-grid .stat {
+    min-height: 100px !important;
+    padding: 14px !important;
+    border-radius: 13px !important;
+  }
+
+  #pageContent .stats-grid .stat > span {
+    font-size: 12px !important;
+  }
+
+  #pageContent .stats-grid .stat > b {
+    font-size: 27px !important;
+  }
+
+  /* النماذج */
+  .panel,
+  .form-panel,
+  .list,
+  .card {
+    padding: 15px !important;
+    margin-bottom: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  .btn,
+  #pageContent button {
+    max-width: 100%;
+  }
+
+  /* منع خروج المحتوى عن عرض الشاشة */
+  #pageContent,
+  #pageContent * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* القائمة الجانبية */
+  #sidebar,
+  .sidebar {
+    width: min(290px, 85vw) !important;
+    min-width: 0 !important;
+    max-width: 85vw !important;
+    top: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  /* الجداول والقوائم الطويلة */
+  #pageContent table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* تحسين هيدر الموبايل فقط */
+@media screen and (max-width: 600px) {
+  .topbar {
+    min-height: auto !important;
+    padding: 14px 12px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  #menuToggle {
+    order: 1 !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .topbar-brand {
+    order: 2 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    text-align: center !important;
+  }
+
+  .topbar-brand strong {
+    font-size: 23px !important;
+    padding: 3px 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .topbar-brand span {
+    font-size: 14px !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .topbar-actions {
+    order: 3 !important;
+    margin: 0 !important;
+    gap: 6px !important;
+  }
+
+  #logoutBtn {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+  }
+}
