@@ -148,3 +148,41 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     font-size: 12px;
   }
 }
+/* نقل اللوجو وجملة رجعنالك عافية زمان إلى اليمين */
+.topbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar-brand {
+  order: 1;
+  margin-right: auto;
+  margin-left: 0;
+  text-align: right;
+}
+
+.topbar-actions {
+  order: 2;
+  margin-right: auto;
+  margin-left: 0;
+}
+
+#menuToggle {
+  order: 3;
+  margin-right: 0;
+  margin-left: 0;
+}
+
+/* ضبط ترتيب العناصر في الشاشات الصغيرة */
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbar-brand {
+    margin-right: auto;
+    text-align: right;
+  }
+}
