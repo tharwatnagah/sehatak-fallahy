@@ -1196,3 +1196,56 @@ tbody tr:hover {
     padding: 12px;
     margin-bottom: 12px;
     border
+/* إصلاح ظهور زر تسجيل الخروج */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#logoutBtn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 43px;
+  padding: 9px 16px;
+  color: #ffffff !important;
+  background: #1b6248 !important;
+  border: 1px solid #1b6248 !important;
+  border-radius: 11px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: pointer;
+}
+
+#logoutBtn:hover {
+  background: #103c30 !important;
+  border-color: #103c30 !important;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  #headerEmployeeName {
+    display: none;
+  }
+
+  #logoutBtn {
+    min-height: 38px;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+}
