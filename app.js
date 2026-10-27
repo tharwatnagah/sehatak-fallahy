@@ -379,7 +379,7 @@
       }
     });
   }
-  }
+
 
   // التنقل بين الصفحات
   document.querySelectorAll('.nav-item').forEach((button) => {
