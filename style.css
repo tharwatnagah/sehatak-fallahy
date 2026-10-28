@@ -856,58 +856,71 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     white-space: nowrap;
   }
 }
-
-/* تحسين هيدر الموبايل فقط */
+/* تنسيق هيدر الموبايل */
 @media screen and (max-width: 600px) {
   .topbar {
-    min-height: auto !important;
-    padding: 14px 12px !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: 44px 1fr !important;
+    grid-template-areas:
+      "menu brand"
+      "actions actions" !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    gap: 12px !important;
+    gap: 14px 10px !important;
+    padding: 14px 16px !important;
+    min-height: auto !important;
   }
 
-  #menuToggle {
-    order: 1 !important;
+  #menuToggle,
+  .menu-toggle {
+    grid-area: menu !important;
     width: 44px !important;
     height: 44px !important;
+    margin: 0 !important;
   }
 
   .topbar-brand {
-    order: 2 !important;
-    flex: 1 1 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
+    grid-area: brand !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
-    gap: 5px !important;
-    text-align: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
   }
 
   .topbar-brand strong {
-    font-size: 23px !important;
-    padding: 3px 16px !important;
+    font-size: 20px !important;
+    line-height: 1.5 !important;
+    padding: 3px 12px !important;
     white-space: nowrap !important;
   }
 
   .topbar-brand span {
-    font-size: 14px !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
     white-space: normal !important;
-    text-align: center !important;
   }
 
   .topbar-actions {
-    order: 3 !important;
+    grid-area: actions !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
     margin: 0 !important;
-    gap: 6px !important;
+    gap: 8px !important;
+  }
+
+  #headerEmployeeName {
+    font-size: 13px !important;
   }
 
   #logoutBtn {
+    min-height: 38px !important;
+    padding: 7px 12px !important;
     font-size: 12px !important;
-    padding: 7px 10px !important;
   }
 }
