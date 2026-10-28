@@ -1159,7 +1159,7 @@
   async function renderEmployeeReports() {
     const [employeesResult, reportsResult] = await Promise.all([
       supabase.from('employees')
-        .select('id,code,name,branch,department')
+        .select('id,code,name,branch,department,active')
         .order('name'),
       supabase.from('reports')
         .select('id,employee_id,report_date,task_code,tasks,remaining,next_plan,obstacles,status,created_at')
@@ -1171,16 +1171,16 @@
     if (reportsResult.error) throw reportsResult.error;
 
     const employees = employeesResult.data || [];
-    const employeeMap = new Map(employees.map((item) => [item.id, item]));
+    const employeeMap = new Map(employees.map((item) => [String(item.id), item]));
 
     reportRows = (reportsResult.data || []).map((report) => ({
       ...report,
-      employee: employeeMap.get(report.employee_id) || {}
+      employee: employeeMap.get(String(report.employee_id)) || {}
     }));
 
     pageContent.innerHTML = `
-      ${heading('تقارير الموظفين', 'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير')}
-      <div class="panel form-panel">
+      ${heading('تقارير الموظفين', 'أرشيف التقارير ومتابعة أيام العمل')}
+      <section class="panel form-panel">
         <div class="form-grid">
           <label>الموظف
             <select id="filterEmployee">
@@ -1188,20 +1188,49 @@
               ${employees.map((item) => `<option value="${esc(item.id)}">${esc(item.name)} - ${esc(item.code)}</option>`).join('')}
             </select>
           </label>
-          <label>من تاريخ<input id="filterFrom" type="date"></label>
-          <label>إلى تاريخ<input id="filterTo" type="date" value="${dateToday()}"></label>
+          <label>من تاريخ
+            <input id="filterFrom" type="date">
+          </label>
+          <label>إلى تاريخ
+            <input id="filterTo" type="date" value="${dateToday()}">
+          </label>
         </div>
-        <button class="btn primary" id="applyReportFilters" type="button">عرض التقارير</button>
-        <button class="outline" id="exportReports" type="button">تصدير CSV لبرنامج Excel</button>
-        <button class="outline" id="printReports" type="button">طباعة التقارير</button>
-      </div>
+        <label>بحث سريع
+          <input id="reportSearch" type="search" placeholder="ابحث بالاسم أو الكود أو الفرع أو المهمة">
+        </label>
+        <div class="report-actions">
+          <button class="btn primary" id="applyReportFilters" type="button">تطبيق الفلاتر</button>
+          <button class="outline" id="resetReportFilters" type="button">إعادة ضبط</button>
+          <button class="outline" id="exportReports" type="button">تصدير CSV لبرنامج Excel</button>
+          <button class="outline" id="printReports" type="button">طباعة التقارير</button>
+        </div>
+      </section>
       <div id="reportSummary" class="stats-grid"></div>
-      <div id="employeeReportsList" class="list"></div>
+      <section class="panel">
+        <h3>متابعة أيام الموظفين</h3>
+        <p>الأيام بدون تقارير محسوبة داخل الفترة المحددة وللموظفين النشطين فقط.</p>
+        <div id="employeeDaysSummary"></div>
+      </section>
+      <section class="panel">
+        <h3>أرشيف التقارير حسب التاريخ</h3>
+        <p>اضغط على أي تقرير لعرض تفاصيله.</p>
+        <div id="employeeReportsList" class="list"></div>
+      </section>
+      <section id="selectedReportDetails"></section>
     `;
 
     $('#applyReportFilters').onclick = drawReports;
+    $('#resetReportFilters').onclick = () => {
+      $('#filterEmployee').value = '';
+      $('#filterFrom').value = '';
+      $('#filterTo').value = dateToday();
+      $('#reportSearch').value = '';
+      drawReports();
+    };
+    $('#reportSearch').addEventListener('input', drawReports);
     $('#exportReports').onclick = exportReportsCSV;
     $('#printReports').onclick = printReports;
+
     drawReports();
   }
 
@@ -1209,42 +1238,163 @@
     const selectedEmployee = $('#filterEmployee')?.value || '';
     const from = $('#filterFrom')?.value || '';
     const to = $('#filterTo')?.value || '';
+    const search = ($('#reportSearch')?.value || '').trim().toLowerCase();
 
     return reportRows.filter((report) => {
-      if (selectedEmployee && report.employee_id !== selectedEmployee) return false;
+      if (selectedEmployee && String(report.employee_id) !== selectedEmployee) return false;
       if (from && report.report_date < from) return false;
       if (to && report.report_date > to) return false;
+
+      if (search) {
+        const employeeInfo = report.employee || {};
+        const tasks = Array.isArray(report.tasks)
+          ? report.tasks.map((task) => `${task.name || ''} ${task.note || ''}`).join(' ')
+          : '';
+
+        const haystack = [
+          employeeInfo.name, employeeInfo.code, employeeInfo.branch,
+          employeeInfo.department, report.task_code, report.status, tasks,
+          report.remaining, report.next_plan, report.obstacles
+        ].join(' ').toLowerCase();
+
+        if (!haystack.includes(search)) return false;
+      }
+
       return true;
     });
   }
 
   function drawReports() {
     const rows = filteredReports();
+    const summary = $('#reportSummary');
+    const daysSummary = $('#employeeDaysSummary');
+    const list = $('#employeeReportsList');
+    const details = $('#selectedReportDetails');
 
-    $('#reportSummary').innerHTML =
+    if (!summary || !daysSummary || !list || !details) return;
+
+    const employees = [...new Map(
+      reportRows.map((report) => [String(report.employee_id), report.employee || {}])
+    ).entries()];
+
+    summary.innerHTML =
       statsCard('عدد التقارير', rows.length) +
-      statsCard('عدد الموظفين', new Set(rows.map((row) => row.employee_id)).size);
+      statsCard('عدد الموظفين أصحاب التقارير', new Set(rows.map((row) => String(row.employee_id))).size) +
+      statsCard('عدد أيام التقارير', new Set(rows.map((row) => row.report_date)).size);
 
-    $('#employeeReportsList').innerHTML = rows.map((report) => {
-      const employeeInfo = report.employee || {};
-      const tasks = Array.isArray(report.tasks) ? report.tasks : [];
+    const from = $('#filterFrom').value;
+    const to = $('#filterTo').value || dateToday();
+    const selectedEmployee = $('#filterEmployee').value;
+
+    const dates = [];
+    if (from && to && from <= to) {
+      const cursor = new Date(from + 'T12:00:00');
+      const end = new Date(to + 'T12:00:00');
+      while (cursor <= end && dates.length < 370) {
+        dates.push([
+          cursor.getFullYear(),
+          String(cursor.getMonth() + 1).padStart(2, '0'),
+          String(cursor.getDate()).padStart(2, '0')
+        ].join('-'));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    const activeEmployees = employees.filter(([id, info]) => {
+      if (selectedEmployee && id !== selectedEmployee) return false;
+      return info && info.name;
+    });
+
+    if (dates.length && activeEmployees.length) {
+      daysSummary.innerHTML = activeEmployees.map(([id, info]) => {
+        const employeeReports = rows.filter((report) => String(report.employee_id) === id);
+        const workedDates = new Set(employeeReports.map((report) => report.report_date));
+        const daysWorked = dates.filter((date) => workedDates.has(date));
+        const daysMissing = dates.filter((date) => !workedDates.has(date));
+
+        return `
+          <article class="panel report-detail">
+            <h4>${esc(info.name || 'موظف')} — ${esc(info.code || '—')}</h4>
+            <p>الفرع: ${esc(info.branch || '—')} · القسم: ${esc(info.department || '—')}</p>
+            <div class="stats-grid">
+              ${statsCard('أيام بها تقارير', daysWorked.length)}
+              ${statsCard('أيام بدون تقارير', daysMissing.length)}
+            </div>
+            <details>
+              <summary>عرض الأيام بدون تقارير (${daysMissing.length})</summary>
+              <p>${daysMissing.length ? daysMissing.map(esc).join('، ') : 'لا توجد أيام بدون تقارير في الفترة.'}</p>
+            </details>
+            <details>
+              <summary>عرض أيام التقارير (${daysWorked.length})</summary>
+              <p>${daysWorked.length ? daysWorked.map(esc).join('، ') : 'لا توجد تقارير في الفترة.'}</p>
+            </details>
+          </article>
+        `;
+      }).join('');
+    } else {
+      daysSummary.innerHTML = '<p>حدد تاريخ البداية والنهاية لعرض أيام العمل والأيام بدون تقارير.</p>';
+    }
+
+    const sortedRows = [...rows].sort((a, b) =>
+      String(b.report_date).localeCompare(String(a.report_date))
+    );
+
+    list.innerHTML = sortedRows.map((report) => {
+      const info = report.employee || {};
+      const taskCount = Array.isArray(report.tasks) ? report.tasks.length : 0;
 
       return `
-        <article class="panel report-detail">
-          <h3>${esc(employeeInfo.name || 'موظف')}</h3>
-          <p>الكود: ${esc(employeeInfo.code || '—')} · الفرع: ${esc(employeeInfo.branch || '—')}</p>
-          <p>التاريخ: ${esc(report.report_date)} · رمز المهمة: ${esc(report.task_code || '—')}</p>
-          <p>الحالة: ${esc(report.status || '—')}</p>
-          <h4>المهام المنفذة</h4>
-          ${tasks.length
-            ? `<ul>${tasks.map((task) => `<li>${esc(task.name || '')} — الكمية: ${esc(task.qty || '—')} — ${esc(task.note || '')}</li>`).join('')}</ul>`
-            : '<p>لا توجد تفاصيل مهام.</p>'}
-          <h4>ما لم يتم</h4><p>${esc(report.remaining || '—')}</p>
-          <h4>خطة اليوم القادم</h4><p>${esc(report.next_plan || '—')}</p>
-          <h4>المعوقات</h4><p>${esc(report.obstacles || '—')}</p>
-        </article>
+        <button type="button" class="list-row report-archive-item"
+          data-report-id="${esc(report.id)}"
+          style="width:100%;text-align:right;cursor:pointer">
+          <span class="grow">
+            <b>${esc(report.report_date)} — ${esc(info.name || 'موظف')}</b>
+            <small>الكود: ${esc(info.code || '—')} · الفرع: ${esc(info.branch || '—')} · المهام: ${taskCount}</small>
+          </span>
+          <span class="pill done">عرض التفاصيل</span>
+        </button>
       `;
     }).join('') || '<div class="empty">لا توجد تقارير في الفترة المحددة.</div>';
+
+    list.querySelectorAll('[data-report-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const report = rows.find((item) => String(item.id) === button.dataset.reportId);
+        if (report) showReportDetails(report);
+      });
+    });
+
+    details.innerHTML = '';
+  }
+
+  function showReportDetails(report) {
+    const info = report.employee || {};
+    const tasks = Array.isArray(report.tasks) ? report.tasks : [];
+    const details = $('#selectedReportDetails');
+    if (!details) return;
+
+    details.innerHTML = `
+      <article class="panel report-detail">
+        <h3>تفاصيل التقرير</h3>
+        <h4>${esc(info.name || 'موظف')} — ${esc(info.code || '—')}</h4>
+        <p>الفرع: ${esc(info.branch || '—')} · القسم: ${esc(info.department || '—')}</p>
+        <p>التاريخ: ${esc(report.report_date)} · رمز المهمة: ${esc(report.task_code || '—')}</p>
+        <p>الحالة: ${esc(report.status || '—')}</p>
+        <h4>المهام المنفذة</h4>
+        ${tasks.length
+          ? `<ul>${tasks.map((task) => `<li>${esc(task.name || '')} — الكمية: ${esc(task.qty ?? '—')} — ${esc(task.note || '')}</li>`).join('')}</ul>`
+          : '<p>لا توجد تفاصيل مهام مسجلة.</p>'}
+        <h4>ما لم يتم</h4><p>${esc(report.remaining || '—')}</p>
+        <h4>خطة اليوم القادم</h4><p>${esc(report.next_plan || '—')}</p>
+        <h4>المعوقات</h4><p>${esc(report.obstacles || '—')}</p>
+        <button type="button" class="outline" id="closeReportDetails">إغلاق التفاصيل</button>
+      </article>
+    `;
+
+    $('#closeReportDetails').onclick = () => {
+      details.innerHTML = '';
+    };
+
+    details.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function csvCell(value) {
@@ -1268,18 +1418,17 @@
     ];
 
     const csvRows = rows.map((report) => {
-      const employeeInfo = report.employee || {};
+      const info = report.employee || {};
       const tasks = Array.isArray(report.tasks)
         ? report.tasks.map((task) =>
-            `${task.name || ''} (الكمية: ${task.qty || ''}; ${task.note || ''})`
+            `${task.name || ''} (الكمية: ${task.qty ?? ''}; ${task.note || ''})`
           ).join(' | ')
         : '';
 
       return [
-        employeeInfo.name, employeeInfo.code, employeeInfo.branch,
-        employeeInfo.department, report.report_date, report.task_code,
-        tasks, report.remaining, report.next_plan, report.obstacles,
-        report.status
+        info.name, info.code, info.branch, info.department,
+        report.report_date, report.task_code, tasks,
+        report.remaining, report.next_plan, report.obstacles, report.status
       ];
     });
 
@@ -1289,13 +1438,12 @@
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-
     link.href = url;
     link.download = `تقارير_الموظفين_${dateToday()}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     toast('تم تصدير التقارير. يمكنك فتح الملف في Excel.');
   }
@@ -1309,18 +1457,19 @@
     }
 
     const printable = rows.map((report) => {
-      const employeeInfo = report.employee || {};
+      const info = report.employee || {};
       const tasks = Array.isArray(report.tasks)
         ? report.tasks.map((task) =>
-            `<li>${esc(task.name)} — ${esc(task.qty || '—')} — ${esc(task.note || '')}</li>`
+            `<li>${esc(task.name)} — ${esc(task.qty ?? '—')} — ${esc(task.note || '')}</li>`
           ).join('')
         : '';
 
       return `
         <article style="border:1px solid #ccc;padding:16px;margin:12px 0;page-break-inside:avoid">
-          <h2>${esc(employeeInfo.name || 'موظف')}</h2>
-          <p>الكود: ${esc(employeeInfo.code || '—')}</p>
-          <p>الفرع: ${esc(employeeInfo.branch || '—')}</p>
+          <h2>${esc(info.name || 'موظف')}</h2>
+          <p>الكود: ${esc(info.code || '—')}</p>
+          <p>الفرع: ${esc(info.branch || '—')}</p>
+          <p>القسم: ${esc(info.department || '—')}</p>
           <p>التاريخ: ${esc(report.report_date)}</p>
           <p>رمز المهمة: ${esc(report.task_code || '—')}</p>
           <h3>المهام المنفذة</h3>
@@ -1343,8 +1492,15 @@
     win.document.write(`
       <!doctype html>
       <html lang="ar" dir="rtl">
-      <head><meta charset="utf-8"><title>تقارير الموظفين</title></head>
-      <body style="font-family:Arial,sans-serif;direction:rtl">
+      <head>
+        <meta charset="utf-8">
+        <title>تقارير الموظفين</title>
+        <style>
+          body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; }
+          article { break-inside: avoid; }
+        </style>
+      </head>
+      <body>
         <h1>تقارير الموظفين</h1>
         ${printable}
         <script>
