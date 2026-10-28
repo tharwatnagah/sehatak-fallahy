@@ -11,31 +11,39 @@
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-
-  <!-- تسجيل الدخول -->
-  <section id="loginView" class="login-wrap">
-    <div class="login-card">
-      <div class="brand">
-        <h1>صحتك فلاحي</h1>
-        <p>رجعنالك عافية زمان</p>
-      </div>
-
-```html
 <!-- تسجيل الدخول -->
 <section id="loginView" class="login-wrap">
   <div class="login-card">
     <div class="brand">
       <img
-        src="./logo.png.jpeg"
+        src="./logo.png.jpeg.jpeg"
         alt="شعار صحتك فلاحي"
         class="login-logo"
       >
-      <h1>صحتك فلاحي</h1>
-      <p>رجعنالك عافية زمان</p>
     </div>
+```
 ```
       <h2>تسجيل الدخول</h2>
       <p>سجّل دخولك للوصول إلى نظام الموظفين</p>
+
+  <!-- تسجيل الدخول -->
+  <section id="loginView" class="login-wrap">
+    <div class="login-card">
+
+      <div class="brand">
+        <img
+          src="./logo.png.jpeg.jpeg"
+          alt="شعار صحتك فلاحي"
+          class="login-logo"
+        >
+        <h1 class="login-brand-name">صحتك فلاحي</h1>
+        <p class="login-brand-tagline">رجعنالك عافية زمان</p>
+      </div>
+
+      <div class="login-heading">
+        <h2>تسجيل الدخول</h2>
+        <p>سجّل دخولك للوصول إلى نظام الموظفين</p>
+      </div>
 
       <form id="loginForm">
         <label for="loginCode">كود الموظف</label>
@@ -62,6 +70,11 @@
           تسجيل الدخول
         </button>
       </form>
+
+      <div class="login-footer">
+        نظام الموارد البشرية والتقارير اليومية
+      </div>
+
     </div>
   </section>
 
@@ -159,6 +172,41 @@
             type="button"
             hidden
           >سجل كلمات المرور</button>
+          <button data-page="home" class="nav-item active" type="button">
+            الرئيسية
+          </button>
+
+          <button data-page="report" class="nav-item" type="button">
+            التقرير اليومي
+          </button>
+
+          <button data-page="complaints" class="nav-item" type="button">
+            الشكاوى والمقترحات
+          </button>
+
+          <button data-page="employeeReports" class="nav-item manager-only" type="button" hidden>
+            تقارير الموظفين
+          </button>
+
+          <button data-page="employees" class="nav-item admin-only" type="button" hidden>
+            إضافة الموظفين
+          </button>
+
+          <button data-page="permissions" class="nav-item admin-only" type="button" hidden>
+            إدارة الصلاحيات
+          </button>
+
+          <button data-page="admin" class="nav-item admin-only" type="button" hidden>
+            لوحة الإدارة
+          </button>
+
+          <button data-page="password" class="nav-item" type="button">
+            تغيير كلمة المرور
+          </button>
+
+          <button data-page="passwordLog" class="nav-item admin-only" type="button" hidden>
+            سجل كلمات المرور
+          </button>
         </nav>
 
         <div class="sidebar-tag">
