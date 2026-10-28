@@ -334,47 +334,37 @@
     height: 110px;
   }
 }
-/* إصلاح ظهور الشاشات المخفية */
-[hidden] {
-  display: none !important;
+/* إصلاح خلفية ولوجو تسجيل الدخول */
+#loginView.login-wrap {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(239, 248, 243, 0.30),
+      rgba(222, 241, 231, 0.25)
+    ),
+    url("./login-background.png.png.jpeg") center center / cover no-repeat !important;
 }
 
-/* منع ظهور صفحة الدخول مع التطبيق في نفس الوقت */
-#loginView[hidden],
-#appView[hidden] {
-  display: none !important;
+#loginView .login-card {
+  max-width: 500px;
 }
 
-/* ضبط عرض التطبيق */
-#appView:not([hidden]) {
-  width: 100%;
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
-#appView .app-layout {
+#loginView .brand {
   display: flex;
-  width: 100%;
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
 }
 
-#appView .main {
-  flex: 1;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-#appView img {
+#loginView .login-logo {
+  width: 260px;
+  height: 150px;
   max-width: 100%;
+  object-fit: contain;
 }
 
-@media (max-width: 768px) {
-  #appView .app-layout {
-    flex-direction: column;
-  }
-
-  #appView .main {
-    width: 100%;
-    padding: 16px;
+@media (max-width: 600px) {
+  #loginView .login-logo {
+    width: 220px;
+    height: 125px;
   }
 }
