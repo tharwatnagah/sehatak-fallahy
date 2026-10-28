@@ -334,3 +334,47 @@
     height: 110px;
   }
 }
+/* إصلاح ظهور الشاشات المخفية */
+[hidden] {
+  display: none !important;
+}
+
+/* منع ظهور صفحة الدخول مع التطبيق في نفس الوقت */
+#loginView[hidden],
+#appView[hidden] {
+  display: none !important;
+}
+
+/* ضبط عرض التطبيق */
+#appView:not([hidden]) {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+#appView .app-layout {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+#appView .main {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#appView img {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  #appView .app-layout {
+    flex-direction: column;
+  }
+
+  #appView .main {
+    width: 100%;
+    padding: 16px;
+  }
+}
