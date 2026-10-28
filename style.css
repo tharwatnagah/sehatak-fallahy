@@ -1,370 +1,1004 @@
-/* ========================================
-   واجهة تسجيل الدخول - صحتك فلاحي
-   ======================================== */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 
-#loginView.login-wrap {
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  box-sizing: border-box;
+:root {
+  --green-950:#063d30;
+  --green-900:#075b42;
+  --green-800:#087653;
+  --green-700:#0b8a61;
+  --green-100:#e2f3e9;
+  --cream:#f5f8f5;
+  --gold:#f2d21c;
+  --ink:#123d32;
+  --muted:#6c8178;
+  --border:#e1ebe5;
+  --white:#fff;
+  --shadow:0 5px 20px rgba(10,65,46,.07);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html{direction:rtl;scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:'Cairo',Tahoma,Arial,sans-serif;font-size:14px;line-height:1.75}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+a{color:var(--green-800)}
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#edf6ee,#fbf8ec)}
+.login-card{width:min(100%,440px);padding:32px;background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 18px 55px rgba(6,61,48,.12);text-align:center}
+.brand{padding:20px 10px;margin:-32px -32px 25px;background:linear-gradient(120deg,var(--green-950),var(--green-700));border-radius:22px 22px 0 0;color:white}
+.brand h1{margin:0;font-size:30px;font-weight:900;color:#fff}
+.brand p{margin:2px 0 0;color:#f7e77c;font-weight:700}
+.login-card h2{margin:0 0 5px;color:var(--green-950);font-size:23px}
+.login-card>p{color:var(--muted);margin:0 0 22px}
+label{display:block;text-align:right;font-weight:700;color:#294e40;margin:12px 0 6px}
+input,select,textarea{width:100%;min-height:43px;padding:10px 12px;border:1px solid #d8e5dc;border-radius:10px;background:#fff;color:var(--ink);outline:none}
+textarea{min-height:110px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--green-700);box-shadow:0 0 0 3px #0b8a611c}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 17px;border:1px solid transparent;border-radius:10px;font-weight:800;transition:.18s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(120deg,var(--green-900),var(--green-700));color:white;box-shadow:0 4px 12px #075b4222}
+.btn-outline{color:white;background:transparent;border-color:rgba(255,255,255,.75)}
+.login-card .btn{width:100%;margin-top:18px}
+/* Top banner */
+#appView{min-height:100vh}
+.topbar{min-height:80px;display:flex;align-items:center;gap:18px;padding:12px 24px;color:white;background:linear-gradient(100deg,#063b2e 0%,#075b42 42%,#0a6b4c 100%);border-bottom:3px solid var(--gold);box-shadow:0 4px 18px #063d301a;position:relative;z-index:30}
+.topbar:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 45%,#ffffff08 70%,transparent)}
+.menu-toggle{order:0;flex:0 0 42px;width:42px;height:42px;border:1px solid #ffffff50;border-radius:10px;background:#ffffff12;color:#fff;font-size:22px}
+.topbar-brand{display:flex;align-items:center;gap:15px;margin-inline-start:auto;position:relative}
+.topbar-brand strong{font-size:24px;line-height:1.3;font-weight:900;color:#fff;white-space:nowrap;border:2px solid var(--gold);border-radius:25px;padding:4px 13px;box-shadow:inset 0 0 0 1px #f2d21c35}
+.topbar-brand span{font-size:19px;font-weight:700;color:#fff;white-space:nowrap}
+.topbar-brand span:before{content:"🌿";margin-left:8px}
+.topbar-actions{display:flex;align-items:center;gap:12px;position:relative}
+#headerEmployeeName{font-weight:700;color:white}
+#logoutBtn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 17px;color:white;background:#ffffff12;border:1px solid #ffffffa0;border-radius:10px;font-weight:800;white-space:nowrap}
+#logoutBtn:hover{background:#fff;color:var(--green-950)}
+/* App frame */
+.app-layout{display:flex;min-height:calc(100vh - 83px)}
+.sidebar{width:270px;min-width:270px;align-self:stretch;display:flex;flex-direction:column;padding:20px 15px 18px;color:white;background:linear-gradient(180deg,#043e30,#07543e 55%,#064331);box-shadow:-5px 0 20px #063d3010}
+.profile{display:flex;align-items:center;gap:12px;padding:13px 10px 22px;margin-bottom:16px;border-bottom:1px solid #ffffff22}
+.profile-avatar{width:51px;height:51px;flex:0 0 51px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#f7f8ed;color:var(--green-900);border:3px solid #ffffff45;font-size:23px;font-weight:900}
+.profile strong{display:block;color:#fff;font-size:15px;overflow-wrap:anywhere}
+.profile span{display:block;color:#d7eadf;font-size:12px;margin-top:3px}
+.sidebar-heading{padding:0 12px 10px;color:#a8cdb9;font-size:12px;font-weight:800}
+.sidebar nav{display:grid;gap:7px}
+.nav-item{display:flex;align-items:center;width:100%;text-align:right;padding:12px 14px;color:#f1f8f3;background:transparent;border:1px solid transparent;border-radius:11px;font-weight:700;transition:.18s ease}
+.nav-item:before{content:"";width:7px;height:7px;border-radius:50%;background:#8fc9a5;margin-left:11px;flex:0 0 7px}
+.nav-item:hover{background:#ffffff14;border-color:#ffffff12;color:#fff}
+.nav-item.active{background:linear-gradient(100deg,#dff1e5,#fffde9);color:var(--green-950);box-shadow:0 5px 14px #001e151c;font-weight:900}
+.nav-item.active:before{background:var(--green-700);box-shadow:0 0 0 4px #0b8a611c}
+.sidebar-tag{margin-top:auto;padding:17px 10px 10px;text-align:center;border-top:1px solid #ffffff20;color:#fff;font-weight:800}
+.sidebar-tag span{display:block;font-size:17px}
+.sidebar-tag small{display:block;color:#c9e3d3;font-size:11px}
+/* Main content */
+.main{flex:1;min-width:0;padding:22px 24px 12px;background:linear-gradient(180deg,#f7faf7,#f2f7f3)}
+#pageContent{max-width:1500px;margin:0 auto;min-width:0}
+.app-footer{text-align:center;color:#82948a;font-size:12px;padding:30px 10px 12px}
+/* General headings and dynamic page cards */
+#pageContent h1{color:var(--green-950);font-size:27px;font-weight:900;margin:0 0 8px}
+#pageContent h2{color:var(--green-950);font-size:22px;font-weight:900;margin:22px 0 12px}
+#pageContent h3{color:var(--green-900);font-size:17px;font-weight:800;margin:18px 0 12px}
+#pageContent p{line-height:1.9}
+#pageContent section,#pageContent article,.panel,.form-panel,.list,.card,.stat,.stats-card{border-radius:var(--radius)}
+.page-heading{padding:23px 25px;margin-bottom:22px;border:1px solid #e4eee4;border-radius:20px;background:radial-gradient(circle at 5% 0%,#f2d21c17,transparent 34%),linear-gradient(110deg,#fff,#f1f7ef)}
+/* Cards and statistics */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin:20px 0 26px}
+.stat,.stats-card{position:relative;min-width:0;padding:20px;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow)}
+.stat:before,.stats-card:before{content:"";position:absolute;right:0;top:12px;bottom:12px;width:4px;border-radius:4px;background:var(--green-700)}
+.stat>span,.stats-card span{display:block;color:var(--muted);font-weight:700;font-size:13px}
+.stat>b,.stats-card b{display:block;margin-top:7px;font-size:30px;line-height:1.4;color:var(--green-950);font-weight:900}
+.panel,.form-panel,.list,.card{padding:20px;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+#pageContent .btn-primary{color:#fff}
+#pageContent button:not(.nav-item):not(.menu-toggle):not(#logoutBtn):not(.btn){border-radius:8px}
+#pageContent input,#pageContent select,#pageContent textarea{max-width:100%}
+/* Tables */
+table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
+/* إصلاح ظهور زر تسجيل الخروج */
+.topbar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 28px 16px;
-  position: relative;
-  isolation: isolate;
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(20, 145, 94, 0.12),
-      transparent 40%
-    ),
-    linear-gradient(145deg, #f1f8f4, #ffffff 55%, #e5f2e9);
+  justify-content: space-between;
+  gap: 12px;
 }
 
-#loginView .login-card {
-  width: 100%;
-  max-width: 420px;
-  box-sizing: border-box;
-  padding: 34px 30px 22px;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(7, 91, 66, 0.12);
-  border-radius: 24px;
-  box-shadow:
-    0 20px 60px rgba(4, 65, 44, 0.12),
-    0 4px 14px rgba(4, 65, 44, 0.05);
-  animation: loginCardAppear 0.55s ease-out both;
-}
-
-#loginView .brand {
-  text-align: center;
-  margin-bottom: 28px;
-}
-
-#loginView .login-logo {
-  display: block;
-  width: 118px;
-  height: 118px;
-  max-width: 100%;
-  object-fit: contain;
-  margin: 0 auto 12px;
-  border-radius: 18px;
-}
-
-#loginView .login-brand-name {
-  color: #075b42;
-  font-size: 27px;
-  font-weight: 900;
-  line-height: 1.5;
-  margin: 0;
-}
-
-#loginView .login-brand-tagline {
-  color: #648174;
-  font-size: 14px;
-  margin: 2px 0 0;
-}
-
-#loginView .login-heading {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-#loginView .login-heading h2 {
-  color: #173e30;
-  font-size: 23px;
-  font-weight: 800;
-  margin: 0 0 8px;
-}
-
-#loginView .login-heading p {
-  color: #78867f;
-  font-size: 14px;
-  line-height: 1.8;
-  margin: 0;
-}
-
-#loginView #loginForm {
-  display: flex;
-  flex-direction: column;
+.topbar-actions {
+  display: flex !important;
+  align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-#loginView #loginForm label {
-  display: block;
-  color: #254b3b;
+#logoutBtn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 1000;
+  min-height: 42px;
+  padding: 10px 18px;
+  color: #fff !important;
+  background: #075b42 !important;
+  border: 1px solid #075b42 !important;
+  border-radius: 10px;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  margin-top: 5px;
-}
-
-#loginView #loginForm input {
-  width: 100%;
-  min-height: 49px;
-  box-sizing: border-box;
-  padding: 12px 15px;
-  border: 1px solid #dce8e0;
-  border-radius: 12px;
-  background: #f9fcfa;
-  color: #183b2d;
-  font: inherit;
-  font-size: 15px;
-  outline: none;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-#loginView #loginForm input::placeholder {
-  color: #a0afa6;
-}
-
-#loginView #loginForm input:focus {
-  background: #ffffff;
-  border-color: #07835b;
-  box-shadow: 0 0 0 4px rgba(7, 131, 91, 0.1);
-}
-
-#loginView #loginForm .btn-primary {
-  width: 100%;
-  min-height: 50px;
-  margin-top: 14px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #087d56, #075b42);
-  color: #ffffff;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(7, 91, 66, 0.18);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    filter 0.2s ease;
 }
 
-#loginView #loginForm .btn-primary:hover {
-  filter: brightness(1.06);
-  transform: translateY(-1px);
-  box-shadow: 0 11px 23px rgba(7, 91, 66, 0.23);
+#logoutBtn:hover {
+  background: #064532 !important;
 }
 
-#loginView #loginForm .btn-primary:active {
-  transform: translateY(0);
-}
-
-#loginView #loginForm .btn-primary:focus-visible {
-  outline: 3px solid rgba(7, 131, 91, 0.35);
-  outline-offset: 3px;
-}
-
-#loginView .login-footer {
-  text-align: center;
-  color: #91a197;
-  font-size: 11px;
-  line-height: 1.8;
-  border-top: 1px solid #edf2ee;
-  margin-top: 24px;
-  padding-top: 15px;
-}
-
-@keyframes loginCardAppear {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  #logoutBtn {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
-
-@media (max-width: 480px) {
-  #loginView.login-wrap {
-    padding: 20px 14px;
-  }
-
-  #loginView .login-card {
-    padding: 27px 21px 20px;
-    border-radius: 20px;
-  }
-
-  #loginView .login-logo {
-    width: 100px;
-    height: 100px;
-  }
-
-  #loginView .login-brand-name {
-    font-size: 24px;
-  }
-
-  #loginView .login-heading h2 {
-    font-size: 21px;
-  }
+/* ترتيب الهيدر: القائمة يمين، اللوجو والجملة بعدها، والخروج شمال */
+.topbar {
+  display: flex !important;
+  flex-direction: row !important;
+  direction: rtl !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 16px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  #loginView .login-card {
-    animation: none;
-  }
-
-  #loginView #loginForm input,
-  #loginView #loginForm .btn-primary {
-    transition: none;
-  }
+#menuToggle {
+  order: 1 !important;
+  margin: 0 !important;
+  flex: 0 0 42px;
 }
-/* ضبط شعار صفحة تسجيل الدخول على الكمبيوتر والموبايل */
-.login-wrap {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 24px 16px;
-  display: flex;
+
+.topbar-brand {
+  order: 2 !important;
+  margin: 0 !important;
+  display: flex !important;
   align-items: center;
-  justify-content: center;
+  gap: 15px;
+  direction: rtl !important;
+  text-align: right !important;
 }
 
-.login-card {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 420px;
-  overflow: hidden;
-}
-
-.login-card .brand {
-  width: 100%;
-  display: flex;
+.topbar-actions {
+  order: 3 !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  display: flex !important;
   align-items: center;
-  justify-content: center;
-  padding: 12px 0 20px;
-  overflow: hidden;
+  gap: 12px;
 }
 
-.login-card .login-logo {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 150px;
-  object-fit: contain;
-  object-position: center;
+#logoutBtn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbar-brand {
+    gap: 8px;
+  }
+
+  .topbar-brand strong {
+    font-size: 18px;
+  }
+
+  .topbar-brand span {
+    font-size: 14px;
+  }
+}
+
+/* ===== تنظيم الصفحة الرئيسية ===== */
+
+/* مساحة مريحة بين أقسام الصفحة */
+#pageContent {
+  width: 100%;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
-@media (max-width: 480px) {
-  .login-wrap {
+#pageContent .page-heading {
+  padding: 26px 30px;
+  margin-bottom: 26px;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* بيانات الترحيب */
+.welcome-card {
+  padding: 8px 0;
+  margin: 10px 0 24px;
+  text-align: right;
+}
+
+.welcome-card h2 {
+  margin-bottom: 8px;
+}
+
+.welcome-card p,
+.welcome-card small {
+  line-height: 2;
+}
+
+/* أزرار الاختصارات في شبكة منتظمة */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 30px;
+}
+
+.quick-grid .quick {
+  width: 100%;
+  min-width: 0;
+  min-height: 76px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: right;
+  white-space: normal;
+  line-height: 1.7;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.quick-grid .quick:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(10, 65, 46, .11);
+}
+
+.quick-grid .quick b {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.quick-grid .quick small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* كروت الإحصائيات */
+.stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 22px 0 30px;
+}
+
+.stats-grid .stat {
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 20px;
+  border-radius: 16px;
+}
+
+.stats-grid .stat > span {
+  line-height: 1.8;
+}
+
+.stats-grid .stat > b {
+  font-size: 32px;
+  margin-top: 8px;
+}
+
+/* الشاشات المتوسطة */
+@media (max-width: 1100px) {
+  .quick-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* الموبايل */
+@media (max-width: 600px) {
+  .main {
     padding: 16px 12px;
   }
 
-  .login-card {
+  #pageContent .page-heading {
+    min-height: 120px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .quick-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .quick-grid .quick {
+    min-height: 68px;
+  }
+
+  .stats-grid .stat {
+    min-height: 105px;
+  }
+}
+
+/* ===== تحسين تصميم الصفحة الرئيسية فقط ===== */
+#pageContent .page-heading {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 32px;
+  min-height: 150px;
+  border: 1px solid #dceadf;
+  border-right: 5px solid #0b8a61;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 0% 100%, #f2d21c24, transparent 38%),
+    linear-gradient(120deg, #ffffff, #edf6ef);
+  box-shadow: 0 8px 24px rgba(6, 61, 48, .05);
+}
+
+#pageContent .page-heading h1 {
+  font-size: 30px;
+  letter-spacing: -.5px;
+}
+
+#pageContent .page-heading p {
+  color: #607b6c;
+  margin: 8px 0 0;
+}
+
+/* منطقة الترحيب */
+.welcome-card {
+  position: relative;
+  padding: 22px 25px;
+  margin: 14px 0 24px;
+  border: 1px solid #dceae0;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #fffef5, #edf7ef);
+  box-shadow: 0 5px 18px rgba(6, 61, 48, .04);
+}
+
+.welcome-card h2 {
+  margin: 0 0 8px !important;
+  font-size: 23px !important;
+  color: #075b42 !important;
+}
+
+.welcome-card p {
+  margin: 4px 0;
+  color: #365e4b;
+}
+
+.welcome-card small {
+  color: #6c8178;
+}
+
+/* الاختصارات: بطاقات مرتبة بألوان البراند */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 32px;
+}
+
+#pageContent .quick-grid .quick {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 100px;
+  padding: 18px 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  text-align: right;
+  white-space: normal;
+  line-height: 1.8;
+  color: #075b42;
+  background: linear-gradient(145deg, #fff, #f3f8f3);
+  border: 1px solid #dce9df;
+  border-radius: 15px;
+  box-shadow: 0 5px 16px rgba(6, 61, 48, .045);
+  transition: transform .2s ease, box-shadow .2s ease,
+              border-color .2s ease;
+}
+
+#pageContent .quick-grid .quick::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  right: 0;
+  width: 4px;
+  border-radius: 5px;
+  background: #0b8a61;
+}
+
+#pageContent .quick-grid .quick:hover {
+  transform: translateY(-3px);
+  border-color: #a9d3b8;
+  box-shadow: 0 10px 24px rgba(6, 61, 48, .10);
+  background: linear-gradient(145deg, #fffef5, #e8f5eb);
+}
+
+#pageContent .quick-grid .quick b {
+  color: #064532;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+#pageContent .quick-grid .quick small {
+  color: #708378;
+  font-size: 12px;
+}
+
+/* عنوان الإحصائيات */
+#pageContent h3 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+/* بطاقات الإحصائيات */
+#pageContent .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0 30px;
+}
+
+#pageContent .stats-grid .stat {
+  position: relative;
+  min-width: 0;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 23px 22px;
+  overflow: hidden;
+  border: 1px solid #dce9df;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #ffffff 55%, #f0f8f1);
+  box-shadow: 0 7px 22px rgba(6, 61, 48, .055);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+#pageContent .stats-grid .stat::before {
+  top: 15px;
+  bottom: 15px;
+  width: 5px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0b8a61, #075b42);
+}
+
+#pageContent .stats-grid .stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 26px rgba(6, 61, 48, .09);
+}
+
+#pageContent .stats-grid .stat > span {
+  color: #627b6d;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+#pageContent .stats-grid .stat > b {
+  margin-top: 9px;
+  color: #064532;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+/* الشاشات المتوسطة */
+@media (max-width: 1100px) {
+  .quick-grid,
+  #pageContent .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* الموبايل */
+@media (max-width: 600px) {
+  .welcome-card {
+    padding: 17px;
+  }
+
+  .quick-grid,
+  #pageContent .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+
+  #pageContent .quick-grid .quick {
+    min-height: 78px;
+    padding: 14px 17px;
+  }
+
+  #pageContent .stats-grid .stat {
+    min-height: 110px;
+    padding: 18px 20px;
+  }
+}
+
+/* ألوان كروت الاختصارات في الصفحة الرئيسية */
+#pageContent .quick-actions,
+#pageContent .quick-links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+#pageContent .quick-actions a,
+#pageContent .quick-links a,
+#pageContent .quick-actions button,
+#pageContent .quick-links button {
+  background: linear-gradient(135deg, #ffffff 0%, #edf7f0 100%);
+  color: #063d30;
+  border: 1px solid #cfe5d6;
+  border-right: 4px solid #0b8a61;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(6, 61, 48, 0.07);
+  transition: background .2s ease, transform .2s ease,
+              box-shadow .2s ease;
+}
+
+#pageContent .quick-actions a:hover,
+#pageContent .quick-links a:hover,
+#pageContent .quick-actions button:hover,
+#pageContent .quick-links button:hover {
+  background: linear-gradient(135deg, #e2f3e9 0%, #fff9d9 100%);
+  border-right-color: #d5b800;
+  box-shadow: 0 7px 18px rgba(6, 61, 48, 0.12);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+  #pageContent .quick-actions,
+  #pageContent .quick-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  #pageContent .quick-actions,
+  #pageContent .quick-links {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* إصلاح القائمة الجانبية على الموبايل */
+#menuToggle,
+.menu-toggle {
+  position: relative;
+  z-index: 1101;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 768px) {
+  .app-layout {
+    display: block;
+    min-width: 0;
+  }
+
+  #sidebar,
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: auto !important;
+    bottom: 0 !important;
+
+    width: min(280px, 85vw) !important;
+    min-width: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+
+    margin: 0 !important;
+    z-index: 1100 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    transform: translateX(100%) !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+
+    transition:
+      transform 0.25s ease,
+      visibility 0.25s ease !important;
+  }
+
+  #sidebar.open,
+  .sidebar.open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  #appView {
+    min-width: 0;
+    overflow-x: clip;
+  }
+}
+
+/* ===== تحسين شامل لواجهة الموبايل ===== */
+@media screen and (max-width: 600px) {
+
+  /* الهيدر */
+  .topbar {
+    min-height: auto !important;
+    padding: 12px 14px !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+  }
+
+  #menuToggle,
+  .menu-toggle {
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    font-size: 24px !important;
+    border-radius: 12px !important;
+  }
+
+  .topbar-brand {
+    flex: 1 1 calc(100% - 60px) !important;
+    min-width: 0 !important;
+    gap: 7px !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+  }
+
+  .topbar-brand strong {
+    font-size: 19px !important;
+    padding: 3px 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .topbar-brand span {
+    font-size: 14px !important;
+    white-space: normal !important;
+  }
+
+  .topbar-actions {
+    width: 100% !important;
+    margin: 0 !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  #headerEmployeeName {
+    font-size: 13px !important;
+  }
+
+  #logoutBtn {
+    min-height: 38px !important;
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* مساحة المحتوى */
+  .app-layout {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px 12px 24px !important;
+  }
+
+  #pageContent {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* عنوان الصفحة */
+  #pageContent .page-heading {
+    min-height: auto !important;
+    padding: 20px 17px !important;
+    margin-bottom: 16px !important;
+    border-radius: 16px !important;
+    border-right-width: 4px !important;
+  }
+
+  #pageContent .page-heading h1 {
+    font-size: 25px !important;
+    line-height: 1.5 !important;
+    margin: 0 0 5px !important;
+  }
+
+  #pageContent .page-heading p {
+    font-size: 14px !important;
+    margin: 4px 0 0 !important;
+  }
+
+  /* بطاقة الترحيب */
+  .welcome-card {
+    padding: 18px !important;
+    margin: 12px 0 20px !important;
+    border-radius: 16px !important;
+  }
+
+  .welcome-card h2 {
+    font-size: 21px !important;
+    line-height: 1.6 !important;
+  }
+
+  .welcome-card p {
+    font-size: 14px !important;
+  }
+
+  .welcome-card small {
+    font-size: 12px !important;
+  }
+
+  /* الاختصارات والإحصائيات */
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 15px 0 24px !important;
+  }
+
+  #pageContent .quick-grid .quick {
+    min-height: 90px !important;
+    padding: 12px !important;
+    border-radius: 13px !important;
+    align-items: flex-start !important;
+  }
+
+  #pageContent .quick-grid .quick b {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+  }
+
+  #pageContent .quick-grid .quick small {
+    font-size: 11px !important;
+    line-height: 1.6 !important;
+  }
+
+  #pageContent .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 15px 0 24px !important;
+  }
+
+  #pageContent .stats-grid .stat {
+    min-height: 100px !important;
+    padding: 14px !important;
+    border-radius: 13px !important;
+  }
+
+  #pageContent .stats-grid .stat > span {
+    font-size: 12px !important;
+  }
+
+  #pageContent .stats-grid .stat > b {
+    font-size: 27px !important;
+  }
+
+  /* النماذج */
+  .panel,
+  .form-panel,
+  .list,
+  .card {
+    padding: 15px !important;
+    margin-bottom: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  .btn,
+  #pageContent button {
     max-width: 100%;
   }
 
-  .login-card .login-logo {
-    max-height: 115px;
-  }
-}
-/* ===== تحسين واجهة تسجيل الدخول ===== */
-
-#loginView.login-wrap {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-
-  /* الخلفية */
-  background:
-    linear-gradient(
-      135deg,
-      rgba(239, 248, 243, 0.78),
-      rgba(222, 241, 231, 0.70)
-    ),
-    url("./background.jpg") center center / cover no-repeat;
-
-  box-sizing: border-box;
-}
-
-#loginView .login-card {
-  width: 100%;
-  max-width: 500px;
-  padding: 38px 34px;
-  box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 28px;
-  box-shadow: 0 18px 55px rgba(0, 70, 48, 0.14);
-}
-
-#loginView .brand {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-#loginView .login-logo {
-  display: block;
-  width: 220px;
-  max-width: 85%;
-  height: 125px;
-  object-fit: contain;
-  object-position: center;
-  margin: 0 auto;
-}
-
-@media (max-width: 600px) {
-  #loginView.login-wrap {
-    padding: 16px 12px;
+  /* منع خروج المحتوى عن عرض الشاشة */
+  #pageContent,
+  #pageContent * {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
-  #loginView .login-card {
-    max-width: 440px;
-    padding: 28px 20px;
-    border-radius: 22px;
+  /* القائمة الجانبية */
+  #sidebar,
+  .sidebar {
+    width: min(290px, 85vw) !important;
+    min-width: 0 !important;
+    max-width: 85vw !important;
+    top: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
   }
 
-  #loginView .login-logo {
-    width: 190px;
-    height: 110px;
+  /* الجداول والقوائم الطويلة */
+  #pageContent table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
-/* إصلاح خلفية ولوجو تسجيل الدخول */
-#loginView.login-wrap {
-  background:
-    linear-gradient(
-      135deg,
-      rgba(239, 248, 243, 0.30),
-      rgba(222, 241, 231, 0.25)
-    ),
-    url("./login-background.png.png.jpeg") center center / cover no-repeat !important;
-}
+/* تنسيق هيدر الموبايل */
+@media screen and (max-width: 600px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 44px 1fr !important;
+    grid-template-areas:
+      "menu brand"
+      "actions actions" !important;
+    align-items: center !important;
+    gap: 14px 10px !important;
+    padding: 14px 16px !important;
+    min-height: auto !important;
+  }
 
-#loginView .login-card {
-  max-width: 500px;
-}
+  #menuToggle,
+  .menu-toggle {
+    grid-area: menu !important;
+    width: 44px !important;
+    height: 44px !important;
+    margin: 0 !important;
+  }
 
-#loginView .brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .topbar-brand {
+    grid-area: brand !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
 
-#loginView .login-logo {
-  width: 260px;
-  height: 150px;
-  max-width: 100%;
-  object-fit: contain;
-}
+  .topbar-brand strong {
+    font-size: 20px !important;
+    line-height: 1.5 !important;
+    padding: 3px 12px !important;
+    white-space: nowrap !important;
+  }
 
-@media (max-width: 600px) {
-  #loginView .login-logo {
-    width: 220px;
-    height: 125px;
+  .topbar-brand span {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    white-space: normal !important;
+  }
+
+  .topbar-actions {
+    grid-area: actions !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    margin: 0 !important;
+    gap: 8px !important;
+  }
+
+  #headerEmployeeName {
+    font-size: 13px !important;
+  }
+
+  #logoutBtn {
+    min-height: 38px !important;
+    padding: 7px 12px !important;
+    font-size: 12px !important;
   }
 }
+
+/* ضبط هيدر الموبايل فقط */
+@media screen and (max-width: 600px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "menu brand"
+      "actions actions" !important;
+    gap: 12px 10px !important;
+    padding: 14px 12px !important;
+    align-items: center !important;
+  }
+
+  #menuToggle,
+  .menu-toggle {
+    grid-area: menu !important;
+    justify-self: start !important;
+  }
+
+  .topbar-brand {
+    grid-area: brand !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    text-align: center !important;
+  }
+
+  .topbar-brand strong {
+    font-size: 19px !important;
+    padding: 4px 10px !important;
+    white-space: normal !important;
+    max-width: 100% !important;
+  }
+
+  .topbar-brand span {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .topbar-actions {
+    grid-area: actions !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+}
+```css
+```css
+```css
+```css
+```css
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+}
+
+#loginView {
+    background-image: url("./login-background.png.png.jpeg") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    min-height: 100vh !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+```
