@@ -1005,3 +1005,42 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     background-attachment: scroll;
   }
 }
+/* استبدال اسم البراند باللوجو في شاشة تسجيل الدخول فقط */
+#loginView .brand h1,
+#loginView .brand p {
+  display: none !important;
+}
+
+#loginView .brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  padding: 20px;
+  margin: -28px -30px 24px;
+  box-sizing: content-box;
+}
+
+#loginView .login-logo {
+  display: block;
+  width: 280px;
+  height: 150px;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+  margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  #loginView .brand {
+    min-height: 160px;
+    margin: -24px -18px 20px;
+    padding: 16px;
+  }
+
+  #loginView .login-logo {
+    width: 240px;
+    height: 125px;
+  }
+}
