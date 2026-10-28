@@ -983,13 +983,12 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
 }
 ```css
 ```css
-html,
-body,
+```css
 #loginView {
-    min-height: 100vh;
-}
-
-#loginView {
-    background: url("./login-background.png.png") center center / cover no-repeat !important;
+    background-image: url("./login-background.png.png.jpeg") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    min-height: 100vh !important;
 }
 ```
