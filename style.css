@@ -268,3 +268,69 @@
     max-height: 115px;
   }
 }
+/* ===== تحسين واجهة تسجيل الدخول ===== */
+
+#loginView.login-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+
+  /* الخلفية */
+  background:
+    linear-gradient(
+      135deg,
+      rgba(239, 248, 243, 0.78),
+      rgba(222, 241, 231, 0.70)
+    ),
+    url("./background.jpg") center center / cover no-repeat;
+
+  box-sizing: border-box;
+}
+
+#loginView .login-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 38px 34px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
+  box-shadow: 0 18px 55px rgba(0, 70, 48, 0.14);
+}
+
+#loginView .brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+#loginView .login-logo {
+  display: block;
+  width: 220px;
+  max-width: 85%;
+  height: 125px;
+  object-fit: contain;
+  object-position: center;
+  margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  #loginView.login-wrap {
+    padding: 16px 12px;
+  }
+
+  #loginView .login-card {
+    max-width: 440px;
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+
+  #loginView .login-logo {
+    width: 190px;
+    height: 110px;
+  }
+}
