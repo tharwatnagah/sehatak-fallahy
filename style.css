@@ -1002,3 +1002,10 @@ body {
     box-sizing: border-box;
 }
 ```
+.login-logo {
+    display: block;
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    margin: 0 auto 10px;
+}
