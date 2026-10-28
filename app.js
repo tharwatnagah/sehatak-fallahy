@@ -560,3 +560,4 @@
       $('#tasks').appendChild(row);
     };
         $('#reportForm').onsubmit = async (event) => 
+})();
