@@ -981,3 +981,27 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     margin: 0 !important;
   }
 }
+/* ===== خلفية تسجيل الدخول ===== */
+
+#loginView.login-wrap {
+  background-image:
+    linear-gradient(
+      rgba(240, 249, 244, 0.12),
+      rgba(240, 249, 244, 0.12)
+    ),
+    url("./login-background.png.png.jpeg");
+
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
+
+@media (max-width: 768px) {
+  #loginView.login-wrap {
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+  }
+}
