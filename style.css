@@ -268,110 +268,69 @@
     max-height: 115px;
   }
 }
-/* ===== خلفية تسجيل الدخول واللوجو ===== */
+/* ===== تحسين واجهة تسجيل الدخول ===== */
 
 #loginView.login-wrap {
   min-height: 100vh;
   min-height: 100dvh;
-  width: 100%;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
 
-  background-image:
+  /* الخلفية */
+  background:
     linear-gradient(
-      rgba(240, 249, 244, 0.12),
-      rgba(240, 249, 244, 0.12)
+      135deg,
+      rgba(239, 248, 243, 0.78),
+      rgba(222, 241, 231, 0.70)
     ),
-    url("./login-background.png.png.jpeg");
+    url("./background.jpg") center center / cover no-repeat;
 
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: scroll;
+  box-sizing: border-box;
 }
 
 #loginView .login-card {
   width: 100%;
-  max-width: 460px;
+  max-width: 500px;
+  padding: 38px 34px;
   box-sizing: border-box;
-  padding: 28px 30px 24px;
   background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(7, 91, 66, 0.15);
-  border-radius: 24px;
-  box-shadow: 0 18px 55px rgba(4, 65, 44, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
+  box-shadow: 0 18px 55px rgba(0, 70, 48, 0.14);
 }
 
 #loginView .brand {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 #loginView .login-logo {
   display: block;
-  width: 280px;
-  height: 150px;
-  max-width: 100%;
+  width: 220px;
+  max-width: 85%;
+  height: 125px;
   object-fit: contain;
   object-position: center;
   margin: 0 auto;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   #loginView.login-wrap {
     padding: 16px 12px;
   }
 
   #loginView .login-card {
-    padding: 24px 18px;
-    border-radius: 20px;
+    max-width: 440px;
+    padding: 28px 20px;
+    border-radius: 22px;
   }
 
   #loginView .login-logo {
-    width: 240px;
-    height: 130px;
-  }
-}
-/* إصلاح خلفية ولوجو صفحة تسجيل الدخول */
-
-#loginView.login-wrap {
-  background-image: url("./login-background.png.png.jpeg") !important;
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  background-attachment: scroll !important;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-/* تكبير اللوجو */
-#loginView .login-logo {
-  width: 280px !important;
-  height: 150px !important;
-  max-width: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  border-radius: 0 !important;
-}
-
-#loginView .login-card {
-  max-width: 460px;
-  background: rgba(255, 255, 255, 0.94);
-}
-
-@media (max-width: 480px) {
-  #loginView .login-logo {
-    width: 240px !important;
-    height: 130px !important;
-  }
-
-  #loginView .login-card {
-    width: 100%;
-    max-width: 100%;
+    width: 190px;
+    height: 110px;
   }
 }
