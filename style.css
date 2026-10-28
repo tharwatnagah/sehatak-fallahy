@@ -981,3 +981,29 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     margin: 0 !important;
   }
 }
+```css
+/* خلفية صفحة تسجيل الدخول */
+#loginView {
+    background-image: url("./login-background.png.png");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* تحسين وضوح صندوق تسجيل الدخول */
+#loginView #loginForm {
+    position: relative;
+    z-index: 1;
+}
+
+/* ضبط الخلفية على الموبايل */
+@media (max-width: 768px) {
+    #loginView {
+        background-attachment: scroll;
+        background-position: center center;
+    }
+}
+```
