@@ -924,3 +924,60 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     font-size: 12px !important;
   }
 }
+
+/* ضبط هيدر الموبايل فقط */
+@media screen and (max-width: 600px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "menu brand"
+      "actions actions" !important;
+    gap: 12px 10px !important;
+    padding: 14px 12px !important;
+    align-items: center !important;
+  }
+
+  #menuToggle,
+  .menu-toggle {
+    grid-area: menu !important;
+    justify-self: start !important;
+  }
+
+  .topbar-brand {
+    grid-area: brand !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    text-align: center !important;
+  }
+
+  .topbar-brand strong {
+    font-size: 19px !important;
+    padding: 4px 10px !important;
+    white-space: normal !important;
+    max-width: 100% !important;
+  }
+
+  .topbar-brand span {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .topbar-actions {
+    grid-area: actions !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+}
