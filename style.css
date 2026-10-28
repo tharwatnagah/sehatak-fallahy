@@ -337,3 +337,41 @@
     height: 130px;
   }
 }
+/* إصلاح خلفية ولوجو صفحة تسجيل الدخول */
+
+#loginView.login-wrap {
+  background-image: url("./login-background.png.png.jpeg") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* تكبير اللوجو */
+#loginView .login-logo {
+  width: 280px !important;
+  height: 150px !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 0 !important;
+}
+
+#loginView .login-card {
+  max-width: 460px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+@media (max-width: 480px) {
+  #loginView .login-logo {
+    width: 240px !important;
+    height: 130px !important;
+  }
+
+  #loginView .login-card {
+    width: 100%;
+    max-width: 100%;
+  }
+}
