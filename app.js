@@ -247,28 +247,17 @@
     return true;
   }
 
-  // تسجيل الدخول - معالجة إرسال النموذج على الموبايل والكمبيوتر
-  const loginForm = document.getElementById('loginForm');
+  // تسجيل الدخول
+  const loginForm = $('#loginForm');
 
   if (loginForm) {
-    // منع المتصفح من إعادة تحميل الصفحة عند إرسال النموذج
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      event.stopPropagation();
-
-      const submitButton = loginForm.querySelector(
-        'button[type="submit"], input[type="submit"]'
-      );
-
-      if (submitButton?.disabled) return;
 
       if (!initClient()) return;
 
-      const codeInput = document.getElementById('loginCode');
-      const passwordInput = document.getElementById('loginPassword');
-
-      const code = codeInput?.value.trim();
-      const password = passwordInput?.value;
+      const code = $('#loginCode')?.value.trim();
+      const password = $('#loginPassword')?.value;
 
       if (!code || !password) {
         toast('اكتب كود الموظف وكلمة المرور.', true);
@@ -278,11 +267,6 @@
       const email = code.includes('@')
         ? code
         : code + '@sehatak-fallahy.local';
-
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'جارٍ تسجيل الدخول...';
-      }
 
       try {
         const { error } = await supabase.auth.signInWithPassword({
@@ -296,42 +280,20 @@
           return;
         }
 
-        const employeeLoaded = await loadEmployee();
+        if (await loadEmployee()) {
+          currentPage = hasPermission('home')
+            ? 'home'
+            : Object.keys(PAGE_PERMISSIONS).find((page) => hasPermission(page));
 
-        if (!employeeLoaded) {
+          showApp();
+        } else {
           showLogin();
-          return;
         }
-
-        currentPage = hasPermission('home')
-          ? 'home'
-          : Object.keys(PAGE_PERMISSIONS).find((page) =>
-              hasPermission(page)
-            );
-
-        if (!currentPage) {
-          toast('حسابك لا يملك صلاحية الوصول لأي صفحة.', true);
-          showLogin();
-          return;
-        }
-
-        showApp();
-
       } catch (error) {
         console.error('Unexpected login error:', error);
-        toast(
-          'حدث خطأ أثناء تسجيل الدخول. حاول مرة أخرى.',
-          true
-        );
-      } finally {
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'تسجيل الدخول';
-        }
+        toast('حدث خطأ أثناء تسجيل الدخول. راجع Console.', true);
       }
-    }, true);
-  } else {
-    console.error('لم يتم العثور على نموذج الدخول: loginForm');
+    });
   }
 
   // تسجيل الخروج
@@ -348,76 +310,14 @@
     });
   }
 
-   // فتح وإغلاق القائمة الجانبية
+  // فتح القائمة الجانبية
   const menuToggle = $('#menuToggle');
-  const sidebar = $('#sidebar');
 
-  function closeSidebar() {
-    if (!sidebar || !menuToggle) return;
-
-    sidebar.classList.remove('open');
-    menuToggle.setAttribute('aria-expanded', 'false');
-    menuToggle.setAttribute('aria-label', 'فتح القائمة');
-  }
-
-  function toggleSidebar() {
-    if (!sidebar || !menuToggle) return;
-
-    const isOpen = sidebar.classList.toggle('open');
-
-    menuToggle.setAttribute('aria-expanded', String(isOpen));
-    menuToggle.setAttribute(
-      'aria-label',
-      isOpen ? 'إغلاق القائمة' : 'فتح القائمة'
-    );
-  }
-
-  if (menuToggle && sidebar) {
-    menuToggle.setAttribute('aria-expanded', 'false');
-
-    menuToggle.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      toggleSidebar();
-    });
-
-    // إغلاق القائمة عند الضغط خارجها على الشاشات الصغيرة
-    document.addEventListener('click', (event) => {
-      if (window.innerWidth > 768) return;
-      if (!sidebar.classList.contains('open')) return;
-
-      if (
-        !sidebar.contains(event.target) &&
-        !menuToggle.contains(event.target)
-      ) {
-        closeSidebar();
-      }
-    });
-
-    // إغلاق القائمة بزر Escape
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeSidebar();
-      }
-    });
-
-    // إغلاق القائمة بعد اختيار صفحة على الموبايل
-    sidebar.querySelectorAll('.nav-item').forEach((button) => {
-      button.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-          closeSidebar();
-        }
-      });
-    });
-
-    // إغلاق القائمة عند الانتقال إلى شاشة كبيرة
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) {
-        closeSidebar();
-      }
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      $('#sidebar')?.classList.toggle('open');
     });
   }
-
 
   // التنقل بين الصفحات
   document.querySelectorAll('.nav-item').forEach((button) => {
@@ -1179,8 +1079,12 @@
     }));
 
     pageContent.innerHTML = `
-      ${heading('تقارير الموظفين', 'بحث حسب الموظف والتاريخ مع إمكانية الطباعة والتصدير')}
-      <div class="panel form-panel">
+      ${heading('تقارير الموظفين', 'عرض منظم للتقارير والمهام مع البحث والتصدير والطباعة')}
+      <section class="panel form-panel employee-reports-filters">
+        <div class="page-heading">
+          <h3>تصفية التقارير</h3>
+          <p>حدد الموظف أو الفترة، أو ابحث بكلمة من بيانات التقرير.</p>
+        </div>
         <div class="form-grid">
           <label>الموظف
             <select id="filterEmployee">
@@ -1191,15 +1095,82 @@
           <label>من تاريخ<input id="filterFrom" type="date"></label>
           <label>إلى تاريخ<input id="filterTo" type="date" value="${dateToday()}"></label>
         </div>
-        <button class="btn primary" id="applyReportFilters" type="button">عرض التقارير</button>
-        <button class="outline" id="exportReports" type="button">تصدير CSV لبرنامج Excel</button>
-        <button class="outline" id="printReports" type="button">طباعة التقارير</button>
+        <label>بحث سريع
+          <input id="filterReportSearch" type="search" placeholder="اسم الموظف، الكود، الفرع، القسم، رمز المهمة أو الحالة">
+        </label>
+        <div class="report-actions">
+          <button class="btn primary" id="applyReportFilters" type="button">تطبيق الفلاتر</button>
+          <button class="outline" id="resetReportFilters" type="button">إعادة ضبط</button>
+          <button class="outline" id="exportReports" type="button">تصدير Excel (CSV)</button>
+          <button class="outline" id="printReports" type="button">طباعة النتائج</button>
+        </div>
+      </section>
+      <div id="reportSummary" class="stats-grid report-summary"></div>
+      <div class="report-list-heading">
+        <h3>نتائج التقارير</h3>
+        <span id="reportResultsCount" class="pill"></span>
       </div>
-      <div id="reportSummary" class="stats-grid"></div>
-      <div id="employeeReportsList" class="list"></div>
+      <div id="employeeReportsList" class="employee-reports-list"></div>
+      <style>
+        .employee-reports-filters { margin-bottom: 18px; }
+        .employee-reports-filters .page-heading { margin-bottom: 12px; }
+        .employee-reports-filters .page-heading h3 { margin: 0 0 5px; }
+        .employee-reports-filters .page-heading p { margin: 0; color: var(--muted, #64748b); }
+        .report-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+        .report-summary { margin: 16px 0 22px; }
+        .report-list-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 8px 0 12px; }
+        .report-list-heading h3 { margin:0; }
+        .employee-reports-list { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; width:100%; min-width:0; }
+        .employee-report-card { min-width:0; padding:18px; border:1px solid var(--border, #e2e8f0); border-radius:14px; background:var(--card, #fff); box-shadow:0 3px 12px rgba(15,23,42,.04); }
+        .employee-report-card h3 { margin:0 0 5px; overflow-wrap:anywhere; }
+        .report-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+        .report-employee-meta { color:var(--muted, #64748b); font-size:.9rem; line-height:1.8; }
+        .report-meta-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin:14px 0; }
+        .report-meta-item { padding:10px; background:var(--surface, #f8fafc); border:1px solid var(--border, #e2e8f0); border-radius:9px; min-width:0; }
+        .report-meta-item small { display:block; color:var(--muted, #64748b); margin-bottom:4px; }
+        .report-meta-item b { display:block; overflow-wrap:anywhere; }
+        .employee-reports-list .table-wrap { width:100%; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border, #e2e8f0); border-radius:10px; }
+        .report-tasks { width:100%; min-width:520px; border-collapse:collapse; margin:0; }
+        .report-tasks th,.report-tasks td { border-bottom:1px solid var(--border, #e2e8f0); padding:11px; text-align:right; vertical-align:top; line-height:1.7; overflow-wrap:anywhere; }
+        .report-tasks th { white-space:nowrap; }
+        .report-tasks tbody tr:last-child td { border-bottom:0; }
+        .report-tasks tbody tr:hover { background:var(--surface, #f8fafc); }
+        .report-tasks th { background:var(--surface, #f8fafc); }
+        .report-section { margin-top:13px; }
+        .report-section h4 { margin:0 0 5px; }
+        .report-section p { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }
+        .report-details { margin-top:12px; border-top:1px solid var(--border, #e2e8f0); padding-top:10px; }
+        .report-details summary { cursor:pointer; font-weight:700; padding:10px 0; }
+        .report-details[open] summary { margin-bottom:10px; }
+        .report-empty { grid-column:1/-1; text-align:center; padding:28px 16px; border:1px dashed var(--border, #cbd5e1); border-radius:12px; color:var(--muted, #64748b); }
+        @media(max-width:1000px) { .report-meta-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:600px) {
+          .report-actions button { flex:1 1 100%; }
+          .report-meta-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+          .employee-report-card { padding:13px; }
+          .report-card-top { flex-wrap:wrap; }
+          .report-meta-item { padding:9px; }
+          .report-tasks th,.report-tasks td { padding:9px; font-size:.9rem; }
+        }
+        @media print {
+          .employee-reports-filters,.report-actions,.report-details summary { display:none !important; }
+          .employee-report-card { break-inside:avoid; box-shadow:none; }
+          .report-details { display:block; }
+          .employee-reports-list .table-wrap { overflow:visible; }
+          .report-tasks { min-width:0; }
+        }
+      </style>
     `;
 
     $('#applyReportFilters').onclick = drawReports;
+    $('#resetReportFilters').onclick = () => {
+      $('#filterEmployee').value = '';
+      $('#filterFrom').value = '';
+      $('#filterTo').value = dateToday();
+      $('#filterReportSearch').value = '';
+      drawReports();
+    };
+    $('#filterReportSearch').addEventListener('input', drawReports);
     $('#exportReports').onclick = exportReportsCSV;
     $('#printReports').onclick = printReports;
     drawReports();
@@ -1209,42 +1180,96 @@
     const selectedEmployee = $('#filterEmployee')?.value || '';
     const from = $('#filterFrom')?.value || '';
     const to = $('#filterTo')?.value || '';
+    const search = ($('#filterReportSearch')?.value || '').trim().toLocaleLowerCase('ar');
 
     return reportRows.filter((report) => {
       if (selectedEmployee && report.employee_id !== selectedEmployee) return false;
       if (from && report.report_date < from) return false;
       if (to && report.report_date > to) return false;
+
+      if (search) {
+        const employeeInfo = report.employee || {};
+        const tasks = Array.isArray(report.tasks) ? report.tasks : [];
+        const searchable = [
+          employeeInfo.name, employeeInfo.code, employeeInfo.branch,
+          employeeInfo.department, report.report_date, report.task_code,
+          report.status, report.remaining, report.next_plan, report.obstacles,
+          ...tasks.flatMap((task) => [task.name, task.qty, task.note])
+        ].join(' ').toLocaleLowerCase('ar');
+
+        if (!searchable.includes(search)) return false;
+      }
+
       return true;
     });
   }
 
   function drawReports() {
+    const summary = $('#reportSummary');
+    const list = $('#employeeReportsList');
+    if (!summary || !list) return;
+
     const rows = filteredReports();
+    const employeeCount = new Set(rows.map((row) => row.employee_id)).size;
+    const taskCount = rows.reduce((total, row) =>
+      total + (Array.isArray(row.tasks) ? row.tasks.length : 0), 0);
 
-    $('#reportSummary').innerHTML =
-      statsCard('عدد التقارير', rows.length) +
-      statsCard('عدد الموظفين', new Set(rows.map((row) => row.employee_id)).size);
+    summary.innerHTML =
+      statsCard('عدد التقارير', rows.length, 'حسب الفلاتر الحالية') +
+      statsCard('عدد الموظفين', employeeCount, 'لديهم تقارير في النتائج') +
+      statsCard('إجمالي المهام', taskCount, 'المهام المسجلة داخل التقارير');
 
-    $('#employeeReportsList').innerHTML = rows.map((report) => {
+    const count = $('#reportResultsCount');
+    if (count) count.textContent = `${rows.length} تقرير`;
+
+    list.innerHTML = rows.map((report) => {
       const employeeInfo = report.employee || {};
       const tasks = Array.isArray(report.tasks) ? report.tasks : [];
+      const status = report.status || 'غير محدد';
+      const statusClass = status === 'مكتمل' || status === 'تم' ? 'done' :
+        status === 'مرفوض' || status === 'ملغي' ? 'rejected' : 'review';
+
+      const tasksHtml = tasks.length
+        ? `<div class="table-wrap"><table class="report-tasks">
+            <thead><tr><th>المهمة</th><th>الكمية</th><th>ملاحظات</th></tr></thead>
+            <tbody>${tasks.map((task) => `
+              <tr>
+                <td>${esc(task.name || '—')}</td>
+                <td>${esc(task.qty || '—')}</td>
+                <td>${esc(task.note || '—')}</td>
+              </tr>
+            `).join('')}</tbody>
+          </table></div>`
+        : '<p>لا توجد تفاصيل مهام مسجلة.</p>';
 
       return `
-        <article class="panel report-detail">
-          <h3>${esc(employeeInfo.name || 'موظف')}</h3>
-          <p>الكود: ${esc(employeeInfo.code || '—')} · الفرع: ${esc(employeeInfo.branch || '—')}</p>
-          <p>التاريخ: ${esc(report.report_date)} · رمز المهمة: ${esc(report.task_code || '—')}</p>
-          <p>الحالة: ${esc(report.status || '—')}</p>
-          <h4>المهام المنفذة</h4>
-          ${tasks.length
-            ? `<ul>${tasks.map((task) => `<li>${esc(task.name || '')} — الكمية: ${esc(task.qty || '—')} — ${esc(task.note || '')}</li>`).join('')}</ul>`
-            : '<p>لا توجد تفاصيل مهام.</p>'}
-          <h4>ما لم يتم</h4><p>${esc(report.remaining || '—')}</p>
-          <h4>خطة اليوم القادم</h4><p>${esc(report.next_plan || '—')}</p>
-          <h4>المعوقات</h4><p>${esc(report.obstacles || '—')}</p>
+        <article class="employee-report-card">
+          <div class="report-card-top">
+            <div>
+              <h3>${esc(employeeInfo.name || 'موظف غير معروف')}</h3>
+              <div class="report-employee-meta">
+                كود الموظف: ${esc(employeeInfo.code || '—')}<br>
+                الفرع: ${esc(employeeInfo.branch || '—')} · القسم: ${esc(employeeInfo.department || '—')}
+              </div>
+            </div>
+            <span class="pill ${statusClass}">${esc(status)}</span>
+          </div>
+          <div class="report-meta-grid">
+            <div class="report-meta-item"><small>تاريخ التقرير</small><b>${esc(report.report_date || '—')}</b></div>
+            <div class="report-meta-item"><small>رمز المهمة</small><b>${esc(report.task_code || '—')}</b></div>
+            <div class="report-meta-item"><small>عدد المهام</small><b>${tasks.length}</b></div>
+            <div class="report-meta-item"><small>تاريخ التسجيل</small><b>${esc((report.created_at || '').slice(0, 10) || '—')}</b></div>
+          </div>
+          <details class="report-details" open>
+            <summary>تفاصيل التقرير والمهام</summary>
+            <div class="report-section"><h4>المهام المنفذة</h4>${tasksHtml}</div>
+            <div class="report-section"><h4>ما لم يتم</h4><p>${esc(report.remaining || '—')}</p></div>
+            <div class="report-section"><h4>خطة اليوم القادم</h4><p>${esc(report.next_plan || '—')}</p></div>
+            <div class="report-section"><h4>المعوقات</h4><p>${esc(report.obstacles || '—')}</p></div>
+          </details>
         </article>
       `;
-    }).join('') || '<div class="empty">لا توجد تقارير في الفترة المحددة.</div>';
+    }).join('') || '<div class="report-empty">لا توجد تقارير تطابق الفلاتر الحالية. جرّب تغيير الفترة أو كلمة البحث.</div>';
   }
 
   function csvCell(value) {
