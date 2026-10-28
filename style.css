@@ -216,3 +216,55 @@
     transition: none;
   }
 }
+/* ضبط شعار صفحة تسجيل الدخول على الكمبيوتر والموبايل */
+.login-wrap {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+}
+
+.login-card .brand {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 20px;
+  overflow: hidden;
+}
+
+.login-card .login-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  object-position: center;
+  margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .login-wrap {
+    padding: 16px 12px;
+  }
+
+  .login-card {
+    max-width: 100%;
+  }
+
+  .login-card .login-logo {
+    max-height: 115px;
+  }
+}
