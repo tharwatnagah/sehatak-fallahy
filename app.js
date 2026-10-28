@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
 
@@ -356,8 +355,7 @@
   function panel(message) {
     return `<div class="panel">${esc(message)}</div>`;
   }
-
-  async function renderPage(page) {
+    async function renderPage(page) {
     if (!employee || !pageContent) return;
 
     if (!requirePermission(page)) {
@@ -704,8 +702,7 @@
       };
     });
   }
-
-  // لوحة الإدارة
+    // لوحة الإدارة
   async function renderAdmin() {
     const [employeesResult, reportsResult, complaintsResult] = await Promise.all([
       supabase.from('employees')
@@ -1054,8 +1051,7 @@
     $('#permissionsSearch').addEventListener('input', drawPermissions);
     drawPermissions();
   }
-
-  // تقارير الموظفين
+    // تقارير الموظفين - واجهة محسنة
   async function renderEmployeeReports() {
     const [employeesResult, reportsResult] = await Promise.all([
       supabase.from('employees')
@@ -1079,84 +1075,104 @@
     }));
 
     pageContent.innerHTML = `
-      ${heading('تقارير الموظفين', 'عرض منظم للتقارير والمهام مع البحث والتصدير والطباعة')}
-      <section class="panel form-panel employee-reports-filters">
-        <div class="page-heading">
-          <h3>تصفية التقارير</h3>
-          <p>حدد الموظف أو الفترة، أو ابحث بكلمة من بيانات التقرير.</p>
-        </div>
-        <div class="form-grid">
+      <style>
+        .er-wrap{display:grid;gap:16px}
+        .er-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+        .er-filters label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+        .er-filters input,.er-filters select{width:100%;min-width:0}
+        .er-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+        .er-actions button{min-height:40px}
+        .er-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+        .er-summary .stat{min-width:0}
+        .er-result-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+        .er-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px}
+        .er-card{min-width:0;border:1px solid var(--border-color,#e3e8e5);border-radius:14px;padding:16px;background:var(--card-bg,#fff);box-shadow:0 2px 8px rgba(0,0,0,.035)}
+        .er-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+        .er-card h3{margin:0 0 5px;font-size:1.05rem}
+        .er-muted{color:var(--muted,#68756f);font-size:.88rem;line-height:1.7}
+        .er-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+        .er-meta-item{background:rgba(120,140,130,.08);border-radius:9px;padding:9px;min-width:0}
+        .er-meta-item span{display:block;font-size:.78rem;color:var(--muted,#68756f);margin-bottom:3px}
+        .er-meta-item b{overflow-wrap:anywhere}
+        .er-details{border-top:1px solid var(--border-color,#e3e8e5);padding-top:12px;margin-top:12px}
+        .er-details summary{cursor:pointer;font-weight:700;padding:4px 0}
+        .er-details h4{margin:14px 0 6px}
+        .er-details p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;margin:5px 0}
+        .er-task-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem}
+        .er-task-table th,.er-task-table td{padding:8px;text-align:right;vertical-align:top;border-bottom:1px solid var(--border-color,#e3e8e5);overflow-wrap:anywhere}
+        .er-task-table th{background:rgba(120,140,130,.08)}
+        .er-status{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:.8rem;background:rgba(120,140,130,.12);white-space:nowrap}
+        .er-empty{padding:28px;text-align:center;border:1px dashed var(--border-color,#d4ddd8);border-radius:12px;color:var(--muted,#68756f)}
+        @media(max-width:520px){.er-meta{grid-template-columns:1fr 1fr}.er-card{padding:12px}.er-task-table{font-size:.8rem}.er-task-table th,.er-task-table td{padding:6px}}
+        @media print{.er-no-print,.page-heading{display:none!important}.er-cards{display:block}.er-card{break-inside:avoid;box-shadow:none;margin-bottom:12px}.er-details[open] summary{display:none}}
+      </style>
+
+      ${heading('تقارير الموظفين', 'ابحث عن التقارير، حدّد الفترة والموظف، ثم اعرض التفاصيل أو اطبعها')}
+
+      <div class="panel form-panel er-wrap">
+        <div class="er-filters">
           <label>الموظف
             <select id="filterEmployee">
               <option value="">كل الموظفين</option>
-              ${employees.map((item) => `<option value="${esc(item.id)}">${esc(item.name)} - ${esc(item.code)}</option>`).join('')}
+              ${employees.map((item) => `<option value="${esc(item.id)}">${esc(item.name)} — ${esc(item.code)}</option>`).join('')}
             </select>
           </label>
-          <label>من تاريخ<input id="filterFrom" type="date"></label>
-          <label>إلى تاريخ<input id="filterTo" type="date" value="${dateToday()}"></label>
+          <label>من تاريخ
+            <input id="filterFrom" type="date">
+          </label>
+          <label>إلى تاريخ
+            <input id="filterTo" type="date">
+          </label>
+          <label>بحث سريع
+            <input id="filterReportSearch" type="search" placeholder="الاسم، الكود، الفرع، المهمة...">
+          </label>
+          <label>الحالة
+            <select id="filterReportStatus">
+              <option value="">كل الحالات</option>
+              ${[...new Set(reportRows.map((r) => r.status).filter(Boolean))].map((status) =>
+                `<option value="${esc(status)}">${esc(status)}</option>`
+              ).join('')}
+            </select>
+          </label>
         </div>
-        <label>بحث سريع
-          <input id="filterReportSearch" type="search" placeholder="اسم الموظف، الكود، الفرع، القسم، رمز المهمة أو الحالة">
-        </label>
-        <div class="report-actions">
+
+        <div class="er-actions er-no-print">
           <button class="btn primary" id="applyReportFilters" type="button">تطبيق الفلاتر</button>
-          <button class="outline" id="resetReportFilters" type="button">إعادة ضبط</button>
-          <button class="outline" id="exportReports" type="button">تصدير Excel (CSV)</button>
+          <button class="outline" id="resetReportFilters" type="button">مسح الفلاتر</button>
+          <button class="outline" id="exportReports" type="button">تصدير CSV لبرنامج Excel</button>
           <button class="outline" id="printReports" type="button">طباعة النتائج</button>
         </div>
-      </section>
-      <div id="reportSummary" class="stats-grid report-summary"></div>
-      <div class="report-list-heading">
-        <h3>نتائج التقارير</h3>
-        <span id="reportResultsCount" class="pill"></span>
       </div>
-      <div id="employeeReportsList" class="employee-reports-list"></div>
-      <style>
-        .employee-reports-filters { margin-bottom: 18px; }
-        .employee-reports-filters .page-heading { margin-bottom: 12px; }
-        .employee-reports-filters .page-heading h3 { margin: 0 0 5px; }
-        .employee-reports-filters .page-heading p { margin: 0; color: var(--muted, #64748b); }
-        .report-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
-        .report-summary { margin: 16px 0 22px; }
-        .report-list-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin: 8px 0 12px; }
-        .report-list-heading h3 { margin:0; }
-        .employee-reports-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr)); gap:14px; }
-        .employee-report-card { min-width:0; padding:18px; border:1px solid var(--border, #e2e8f0); border-radius:14px; background:var(--card, #fff); box-shadow:0 3px 12px rgba(15,23,42,.04); }
-        .employee-report-card h3 { margin:0 0 5px; overflow-wrap:anywhere; }
-        .report-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-        .report-employee-meta { color:var(--muted, #64748b); font-size:.9rem; line-height:1.8; }
-        .report-meta-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin:14px 0; }
-        .report-meta-item { padding:10px; background:var(--surface, #f8fafc); border-radius:9px; min-width:0; }
-        .report-meta-item small { display:block; color:var(--muted, #64748b); margin-bottom:4px; }
-        .report-meta-item b { display:block; overflow-wrap:anywhere; }
-        .report-tasks { width:100%; border-collapse:collapse; margin:8px 0 14px; }
-        .report-tasks th,.report-tasks td { border:1px solid var(--border, #e2e8f0); padding:8px; text-align:right; vertical-align:top; }
-        .report-tasks th { background:var(--surface, #f8fafc); }
-        .report-section { margin-top:13px; }
-        .report-section h4 { margin:0 0 5px; }
-        .report-section p { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }
-        .report-details { margin-top:12px; border-top:1px solid var(--border, #e2e8f0); padding-top:10px; }
-        .report-details summary { cursor:pointer; font-weight:700; }
-        .report-empty { grid-column:1/-1; text-align:center; padding:28px 16px; border:1px dashed var(--border, #cbd5e1); border-radius:12px; color:var(--muted, #64748b); }
-        @media(max-width:600px) {
-          .report-actions button { flex:1 1 100%; }
-          .report-meta-grid { grid-template-columns:1fr 1fr; }
-          .employee-report-card { padding:13px; }
-        }
-      </style>
+
+      <div id="reportSummary" class="er-summary"></div>
+
+      <div class="er-result-head">
+        <h3>نتائج التقارير</h3>
+        <span id="reportResultCount" class="er-muted"></span>
+      </div>
+
+      <div id="employeeReportsList" class="er-cards"></div>
     `;
 
     $('#applyReportFilters').onclick = drawReports;
+
     $('#resetReportFilters').onclick = () => {
       $('#filterEmployee').value = '';
       $('#filterFrom').value = '';
-      $('#filterTo').value = dateToday();
+      $('#filterTo').value = '';
       $('#filterReportSearch').value = '';
+      $('#filterReportStatus').value = '';
       drawReports();
     };
-    $('#filterReportSearch').addEventListener('input', drawReports);
+
     $('#exportReports').onclick = exportReportsCSV;
     $('#printReports').onclick = printReports;
+
+    ['filterEmployee', 'filterFrom', 'filterTo', 'filterReportStatus'].forEach((id) => {
+      $('#' + id).addEventListener('change', drawReports);
+    });
+
+    $('#filterReportSearch').addEventListener('input', drawReports);
     drawReports();
   }
 
@@ -1165,19 +1181,29 @@
     const from = $('#filterFrom')?.value || '';
     const to = $('#filterTo')?.value || '';
     const search = ($('#filterReportSearch')?.value || '').trim().toLocaleLowerCase('ar');
+    const status = $('#filterReportStatus')?.value || '';
 
     return reportRows.filter((report) => {
       if (selectedEmployee && report.employee_id !== selectedEmployee) return false;
       if (from && report.report_date < from) return false;
       if (to && report.report_date > to) return false;
+      if (status && (report.status || '') !== status) return false;
 
       if (search) {
         const employeeInfo = report.employee || {};
         const tasks = Array.isArray(report.tasks) ? report.tasks : [];
+
         const searchable = [
-          employeeInfo.name, employeeInfo.code, employeeInfo.branch,
-          employeeInfo.department, report.report_date, report.task_code,
-          report.status, report.remaining, report.next_plan, report.obstacles,
+          employeeInfo.name,
+          employeeInfo.code,
+          employeeInfo.branch,
+          employeeInfo.department,
+          report.report_date,
+          report.task_code,
+          report.status,
+          report.remaining,
+          report.next_plan,
+          report.obstacles,
           ...tasks.flatMap((task) => [task.name, task.qty, task.note])
         ].join(' ').toLocaleLowerCase('ar');
 
@@ -1189,71 +1215,87 @@
   }
 
   function drawReports() {
-    const summary = $('#reportSummary');
-    const list = $('#employeeReportsList');
-    if (!summary || !list) return;
-
     const rows = filteredReports();
     const employeeCount = new Set(rows.map((row) => row.employee_id)).size;
     const taskCount = rows.reduce((total, row) =>
       total + (Array.isArray(row.tasks) ? row.tasks.length : 0), 0);
 
-    summary.innerHTML =
-      statsCard('عدد التقارير', rows.length, 'حسب الفلاتر الحالية') +
-      statsCard('عدد الموظفين', employeeCount, 'لديهم تقارير في النتائج') +
-      statsCard('إجمالي المهام', taskCount, 'المهام المسجلة داخل التقارير');
+    $('#reportSummary').innerHTML =
+      statsCard('عدد التقارير', rows.length) +
+      statsCard('عدد الموظفين', employeeCount) +
+      statsCard('إجمالي المهام', taskCount);
 
-    const count = $('#reportResultsCount');
-    if (count) count.textContent = `${rows.length} تقرير`;
+    $('#reportResultCount').textContent = `عرض ${rows.length} تقرير`;
 
-    list.innerHTML = rows.map((report) => {
+    $('#employeeReportsList').innerHTML = rows.map((report, index) => {
       const employeeInfo = report.employee || {};
       const tasks = Array.isArray(report.tasks) ? report.tasks : [];
       const status = report.status || 'غير محدد';
-      const statusClass = status === 'مكتمل' || status === 'تم' ? 'done' :
-        status === 'مرفوض' || status === 'ملغي' ? 'rejected' : 'review';
-
-      const tasksHtml = tasks.length
-        ? `<div class="table-wrap"><table class="report-tasks">
-            <thead><tr><th>المهمة</th><th>الكمية</th><th>ملاحظات</th></tr></thead>
-            <tbody>${tasks.map((task) => `
-              <tr>
-                <td>${esc(task.name || '—')}</td>
-                <td>${esc(task.qty || '—')}</td>
-                <td>${esc(task.note || '—')}</td>
-              </tr>
-            `).join('')}</tbody>
-          </table></div>`
-        : '<p>لا توجد تفاصيل مهام مسجلة.</p>';
 
       return `
-        <article class="employee-report-card">
-          <div class="report-card-top">
+        <article class="er-card">
+          <div class="er-card-top">
             <div>
               <h3>${esc(employeeInfo.name || 'موظف غير معروف')}</h3>
-              <div class="report-employee-meta">
-                كود الموظف: ${esc(employeeInfo.code || '—')}<br>
-                الفرع: ${esc(employeeInfo.branch || '—')} · القسم: ${esc(employeeInfo.department || '—')}
-              </div>
+              <div class="er-muted">كود الموظف: ${esc(employeeInfo.code || '—')}</div>
             </div>
-            <span class="pill ${statusClass}">${esc(status)}</span>
+            <span class="er-status">${esc(status)}</span>
           </div>
-          <div class="report-meta-grid">
-            <div class="report-meta-item"><small>تاريخ التقرير</small><b>${esc(report.report_date || '—')}</b></div>
-            <div class="report-meta-item"><small>رمز المهمة</small><b>${esc(report.task_code || '—')}</b></div>
-            <div class="report-meta-item"><small>عدد المهام</small><b>${tasks.length}</b></div>
-            <div class="report-meta-item"><small>تاريخ التسجيل</small><b>${esc((report.created_at || '').slice(0, 10) || '—')}</b></div>
+
+          <div class="er-meta">
+            <div class="er-meta-item">
+              <span>تاريخ التقرير</span>
+              <b>${esc(report.report_date || '—')}</b>
+            </div>
+            <div class="er-meta-item">
+              <span>رمز المهمة</span>
+              <b>${esc(report.task_code || '—')}</b>
+            </div>
+            <div class="er-meta-item">
+              <span>الفرع</span>
+              <b>${esc(employeeInfo.branch || '—')}</b>
+            </div>
+            <div class="er-meta-item">
+              <span>القسم</span>
+              <b>${esc(employeeInfo.department || '—')}</b>
+            </div>
           </div>
-          <details class="report-details">
-            <summary>عرض تفاصيل التقرير والمهام</summary>
-            <div class="report-section"><h4>المهام المنفذة</h4>${tasksHtml}</div>
-            <div class="report-section"><h4>ما لم يتم</h4><p>${esc(report.remaining || '—')}</p></div>
-            <div class="report-section"><h4>خطة اليوم القادم</h4><p>${esc(report.next_plan || '—')}</p></div>
-            <div class="report-section"><h4>المعوقات</h4><p>${esc(report.obstacles || '—')}</p></div>
+
+          <details class="er-details" ${index === 0 ? 'open' : ''}>
+            <summary>عرض تفاصيل التقرير (${tasks.length} مهمة)</summary>
+
+            <h4>المهام المنفذة</h4>
+            ${tasks.length ? `
+              <div style="overflow-x:auto">
+                <table class="er-task-table">
+                  <thead>
+                    <tr><th>المهمة</th><th>الكمية</th><th>ملاحظات</th></tr>
+                  </thead>
+                  <tbody>
+                    ${tasks.map((task) => `
+                      <tr>
+                        <td>${esc(task.name || '—')}</td>
+                        <td>${esc(task.qty || '—')}</td>
+                        <td>${esc(task.note || '—')}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : '<p class="er-muted">لا توجد تفاصيل مهام مسجلة.</p>'}
+
+            <h4>ما لم يتم</h4>
+            <p>${esc(report.remaining || 'لا يوجد')}</p>
+
+            <h4>خطة العمل لليوم القادم</h4>
+            <p>${esc(report.next_plan || 'لا توجد خطة مسجلة')}</p>
+
+            <h4>المعوقات</h4>
+            <p>${esc(report.obstacles || 'لا توجد معوقات مسجلة')}</p>
           </details>
         </article>
       `;
-    }).join('') || '<div class="report-empty">لا توجد تقارير تطابق الفلاتر الحالية. جرّب تغيير الفترة أو كلمة البحث.</div>';
+    }).join('') || '<div class="er-empty">لا توجد تقارير مطابقة للفلاتر المحددة.</div>';
   }
 
   function csvCell(value) {
@@ -1418,8 +1460,7 @@
       event.currentTarget.reset();
     };
   }
-
-  // سجل تغييرات كلمات المرور
+    // سجل تغييرات كلمات المرور
   async function renderPasswordLog() {
     const { data, error } = await supabase
       .from('password_change_log')
