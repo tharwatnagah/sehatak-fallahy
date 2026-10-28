@@ -1107,3 +1107,16 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
   object-fit: contain;
   margin: 0 auto;
 }
+/* إزالة الخلفية والإطار الأبيض حول اللوجو فقط */
+#loginView .brand {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#loginView .login-logo {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
