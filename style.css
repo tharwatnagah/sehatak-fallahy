@@ -1089,3 +1089,21 @@ th,td{padding:11px 13px;text-align:right;border-bottom:1px solid #e9f0eb}
     height: 120px;
   }
 }
+/* إزالة المستطيل الأخضر خلف اللوجو في شاشة تسجيل الدخول */
+#loginView .brand {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 0 20px !important;
+}
+
+/* ضبط اللوجو على الكمبيوتر والموبايل */
+#loginView .login-logo {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+}
