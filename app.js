@@ -976,7 +976,7 @@
             .some((value) => String(value || '').toLowerCase().includes(search))
         )
         .map((item) => `
-          <div class="list-row">
+          <div class="list-row" style="flex-wrap:wrap;gap:10px">
             <div class="grow">
               <b>${esc(item.name)}</b>
               <small>الكود: ${esc(item.code)} · ${esc(item.branch || '—')} · ${esc(item.department || '')}</small>
@@ -984,8 +984,62 @@
             </div>
             <span class="pill ${item.active ? 'done' : 'rejected'}">${item.active ? 'نشط' : 'غير نشط'}</span>
             <span>${item.role === 'admin' ? 'مسؤول النظام' : item.role === 'manager' ? 'مدير تقارير' : 'موظف'}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn ${item.active ? 'danger' : 'primary'}" type="button" data-toggle-employee="${esc(item.id)}" ${item.id === employee.id ? 'disabled title="لا يمكنك تعطيل حسابك الحالي"' : ''}>${item.active ? 'تعطيل الموظف' : 'إعادة التفعيل'}</button>
+              <button class="btn danger" type="button" data-delete-employee="${esc(item.id)}" ${item.id === employee.id ? 'disabled title="لا يمكنك حذف حسابك الحالي"' : ''}>حذف السجل</button>
+            </div>
           </div>
         `).join('') || '<div class="empty">لا توجد نتائج.</div>';
+
+      $('#employeeList').querySelectorAll('[data-toggle-employee]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          if (!canManageEmployees()) return toast('ليس لديك صلاحية إدارة الموظفين.', true);
+          const item = data.find((row) => String(row.id) === button.dataset.toggleEmployee);
+          if (!item || item.id === employee.id) return;
+          const nextActive = !item.active;
+          const action = nextActive ? 'إعادة تفعيل' : 'تعطيل';
+          if (!window.confirm(`هل تريد ${action} الموظف «${item.name}»؟`)) return;
+          button.disabled = true;
+          try {
+            const { data: updated, error: updateError } = await supabase
+              .from('employees').update({ active: nextActive }).eq('id', item.id).select('id,active');
+            if (updateError) throw updateError;
+            if (!updated || !updated.length) throw new Error('لم يتم تحديث الحالة. تحقق من صلاحيات UPDATE وسياسات RLS.');
+            item.active = nextActive;
+            toast(nextActive ? 'تمت إعادة تفعيل الموظف.' : 'تم تعطيل الموظف بنجاح.');
+            drawEmployees();
+          } catch (err) {
+            console.error('Employee activation update failed:', err);
+            toast('تعذر تحديث حالة الموظف: ' + (err.message || String(err)), true);
+            button.disabled = false;
+          }
+        });
+      });
+
+      $('#employeeList').querySelectorAll('[data-delete-employee]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          if (!canManageEmployees()) return toast('ليس لديك صلاحية إدارة الموظفين.', true);
+          const item = data.find((row) => String(row.id) === button.dataset.deleteEmployee);
+          if (!item || item.id === employee.id) return;
+          if (!window.confirm(`هل أنت متأكد من حذف سجل الموظف «${item.name}»؟ هذا لا يحذف حساب تسجيل الدخول من Supabase Auth، وقد يُرفض الحذف إذا كانت هناك تقارير أو سجلات مرتبطة بالموظف.`)) return;
+          button.disabled = true;
+          try {
+            const { data: deleted, error: deleteError } = await supabase
+              .from('employees').delete().eq('id', item.id).select('id');
+            if (deleteError) throw deleteError;
+            if (!deleted || !deleted.length) throw new Error('لم يتم حذف السجل. تحقق من صلاحيات DELETE وسياسات RLS.');
+            const index = data.findIndex((row) => String(row.id) === String(item.id));
+            if (index >= 0) data.splice(index, 1);
+            delete lastReport[item.id];
+            toast('تم حذف سجل الموظف. تذكّر أن حساب Auth لم يُحذف.');
+            drawEmployees();
+          } catch (err) {
+            console.error('Employee record deletion failed:', err);
+            toast('تعذر حذف سجل الموظف: ' + (err.message || String(err)), true);
+            button.disabled = false;
+          }
+        });
+      });
     };
 
     $('#employeeSearch').addEventListener('input', drawEmployees);
