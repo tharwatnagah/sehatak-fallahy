@@ -794,7 +794,10 @@
           <td>${esc(item.title || '—')}</td>
           <td>${escDate(item.created_at)}</td>
           <td><span class="pill ${statusClass(item.status)}">${esc(item.status || 'قيد المراجعة')}</span></td>
-          <td><button class="btn" type="button" data-view-complaint="${esc(item.id)}">عرض التفاصيل</button></td>
+          <td style="white-space:nowrap">
+            <button class="btn" type="button" data-view-complaint="${esc(item.id)}">عرض التفاصيل</button>
+            ${isAdmin() ? `<button class="btn danger" type="button" data-delete-complaint="${esc(item.id)}" style="margin-inline-start:6px">حذف الشكوى</button>` : ''}
+          </td>
         </tr>
       `).join('');
       empty.hidden = filtered.length > 0;
@@ -802,7 +805,32 @@
 
     search.addEventListener('input', paintRows);
     filter.addEventListener('change', paintRows);
-    body.addEventListener('click', (event) => {
+    body.addEventListener('click', async (event) => {
+      const deleteButton = event.target.closest('[data-delete-complaint]');
+      if (deleteButton) {
+        if (!isAdmin()) {
+          toast('حذف الشكاوى متاح لمسؤول النظام فقط.', true);
+          return;
+        }
+        const complaintId = deleteButton.dataset.deleteComplaint;
+        const itemToDelete = rows.find(x => String(x.id) === complaintId);
+        if (!itemToDelete) return;
+        const confirmed = window.confirm(`هل أنت متأكد من حذف الشكوى «${itemToDelete.title || 'بدون عنوان'}»؟\nلا يمكن التراجع عن هذا الإجراء.`);
+        if (!confirmed) return;
+        deleteButton.disabled = true;
+        const { error: deleteError } = await supabase.from('complaints')
+          .delete()
+          .eq('id', itemToDelete.id);
+        if (deleteError) {
+          deleteButton.disabled = false;
+          toast('تعذر حذف الشكوى: ' + deleteError.message, true);
+          return;
+        }
+        toast('تم حذف الشكوى بنجاح.');
+        await renderSubmittedComplaints();
+        return;
+      }
+
       const button = event.target.closest('[data-view-complaint]');
       if (!button) return;
       const item = rows.find(x => String(x.id) === button.dataset.viewComplaint);
