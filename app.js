@@ -801,6 +801,40 @@
         </tr>
       `).join('');
       empty.hidden = filtered.length > 0;
+
+      // اربط زر الحذف مباشرة بعد رسم الصفوف لضمان استجابة الضغط.
+      body.querySelectorAll('[data-delete-complaint]').forEach((button) => {
+        button.addEventListener('click', async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!isAdmin()) {
+            toast('حذف الشكاوى متاح لمسؤول النظام فقط.', true);
+            return;
+          }
+          const complaintId = button.dataset.deleteComplaint;
+          const itemToDelete = rows.find(x => String(x.id) === String(complaintId));
+          if (!itemToDelete) {
+            toast('لم يتم العثور على الشكوى. حدّث الصفحة وحاول مرة أخرى.', true);
+            return;
+          }
+          if (!window.confirm(`هل أنت متأكد من حذف الشكوى «${itemToDelete.title || 'بدون عنوان'}»؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+          button.disabled = true;
+          try {
+            const { data: deletedRows, error: deleteError } = await supabase
+              .from('complaints').delete().eq('id', itemToDelete.id).select('id');
+            if (deleteError) throw deleteError;
+            if (!deletedRows || deletedRows.length === 0) {
+              throw new Error('لم تُحذف أي سجلات. راجع صلاحيات DELETE وسياسات RLS في Supabase.');
+            }
+            toast('تم حذف الشكوى بنجاح.');
+            await renderSubmittedComplaints();
+          } catch (err) {
+            button.disabled = false;
+            toast('تعذر حذف الشكوى: ' + (err?.message || String(err)), true);
+            console.error('Delete complaint failed:', err);
+          }
+        });
+      });
     }
 
     search.addEventListener('input', paintRows);
