@@ -18,6 +18,7 @@
     home: 'الرئيسية',
     report: 'التقرير اليومي',
     complaints: 'الشكاوى والمقترحات',
+    submittedComplaints: 'الشكاوى المقدمة',
     employeeReports: 'تقارير الموظفين',
     employees: 'إضافة الموظفين',
     permissions: 'إدارة الصلاحيات',
@@ -28,19 +29,19 @@
 
   const DEFAULT_PERMISSIONS = {
     employee: {
-      home: true, report: true, complaints: true,
+      home: true, report: true, complaints: true, submittedComplaints: false,
       employeeReports: false, employees: false,
       permissions: false, admin: false, password: true,
       passwordLog: false
     },
     manager: {
-      home: true, report: true, complaints: true,
+      home: true, report: true, complaints: true, submittedComplaints: true,
       employeeReports: true, employees: false,
       permissions: false, admin: false, password: true,
       passwordLog: false
     },
     admin: {
-      home: true, report: true, complaints: true,
+      home: true, report: true, complaints: true, submittedComplaints: true,
       employeeReports: true, employees: true,
       permissions: true, admin: true, password: true,
       passwordLog: true
@@ -137,7 +138,32 @@
     if (appView) appView.hidden = true;
   }
 
+  // إضافة مدخل مستقل لمتابعة الشكاوى المقدمة من الموظفين.
+  function ensureSubmittedComplaintsNav() {
+    const sidebar = $('#sidebar');
+    if (!sidebar || $('[data-page="submittedComplaints"]')) return;
+
+    const nav = sidebar.querySelector('nav') || sidebar;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'nav-item';
+    button.dataset.page = 'submittedComplaints';
+    button.innerHTML = '<span aria-hidden="true">▤</span><span>الشكاوى المقدمة</span>';
+    button.addEventListener('click', () => {
+      if (!employee || !requirePermission('submittedComplaints')) return;
+      currentPage = 'submittedComplaints';
+      sidebar.classList.remove('open');
+      updateActiveNav();
+      renderPage(currentPage);
+    });
+
+    const permissionsButton = nav.querySelector('[data-page="permissions"]');
+    if (permissionsButton) permissionsButton.before(button);
+    else nav.appendChild(button);
+  }
+
   function applyPermissions() {
+    ensureSubmittedComplaintsNav();
     // الصلاحية المحفوظة لكل حساب هي المرجع النهائي لإظهار صفحات القائمة.
     // لا نعيد إظهار الصفحات بناءً على الدور (admin/manager)، لأن ذلك
     // كان يتجاوز اختيار مسؤول النظام عند إغلاق صلاحية صفحة معينة.
@@ -380,6 +406,9 @@
           break;
         case 'complaints':
           await renderComplaints();
+          break;
+        case 'submittedComplaints':
+          await renderSubmittedComplaints();
           break;
         case 'admin':
           await renderAdmin();
@@ -699,6 +728,117 @@
       };
     });
   }
+  // قائمة مستقلة لعرض الشكاوى التي قدمها الموظفون.
+  async function renderSubmittedComplaints() {
+    if (!isManager() && !isAdmin()) {
+      throw new Error('هذه الصفحة مخصصة للمدير ومسؤول النظام.');
+    }
+
+    const { data, error } = await supabase
+      .from('complaints')
+      .select('id,employee_id,kind,title,details,status,created_at,updated_at,employees(name,code,branch,department)')
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error) throw error;
+    const rows = data || [];
+    const escDate = (value) => value ? esc(new Date(value).toLocaleDateString('ar-EG')) : '—';
+    const statusClass = (status) => status === 'تم الحل' ? 'done' : status === 'مرفوضة' ? 'rejected' : 'review';
+
+    pageContent.innerHTML = `
+      ${heading('الشكاوى المقدمة', 'متابعة منظمة لجميع الشكاوى التي أرسلها الموظفون')}
+      <div class="stats-grid">
+        ${statsCard('إجمالي الشكاوى', rows.length)}
+        ${statsCard('قيد المراجعة', rows.filter(x => x.status === 'قيد المراجعة').length)}
+        ${statsCard('تم الحل', rows.filter(x => x.status === 'تم الحل').length)}
+        ${statsCard('مرفوضة', rows.filter(x => x.status === 'مرفوضة').length)}
+      </div>
+      <div class="panel">
+        <div class="complaints-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <input id="submittedComplaintSearch" type="search" placeholder="ابحث باسم الموظف أو عنوان الشكوى..." aria-label="البحث في الشكاوى" style="flex:1;min-width:220px">
+          <select id="submittedComplaintStatus" aria-label="تصفية حسب الحالة">
+            <option value="">كل الحالات</option>
+            <option>قيد المراجعة</option><option>جارٍ الحل</option><option>تم الحل</option><option>مرفوضة</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table" style="width:100%;border-collapse:collapse;min-width:760px">
+            <thead><tr><th>رقم</th><th>الموظف</th><th>نوع الشكوى</th><th>عنوان الشكوى</th><th>تاريخ التقديم</th><th>الحالة</th><th>الإجراء</th></tr></thead>
+            <tbody id="submittedComplaintsBody"></tbody>
+          </table>
+        </div>
+        <div id="submittedComplaintsEmpty" class="empty" hidden>لا توجد شكاوى مطابقة للبحث.</div>
+      </div>
+      <div id="submittedComplaintDetails" class="panel" hidden></div>
+    `;
+
+    const body = $('#submittedComplaintsBody');
+    const search = $('#submittedComplaintSearch');
+    const filter = $('#submittedComplaintStatus');
+    const empty = $('#submittedComplaintsEmpty');
+    const details = $('#submittedComplaintDetails');
+
+    function paintRows() {
+      const term = search.value.trim().toLocaleLowerCase();
+      const status = filter.value;
+      const filtered = rows.filter(item => {
+        const emp = item.employees || {};
+        const haystack = [item.title, item.kind, item.details, emp.name, emp.code, emp.branch].join(' ').toLocaleLowerCase();
+        return (!term || haystack.includes(term)) && (!status || item.status === status);
+      });
+      body.innerHTML = filtered.map(item => `
+        <tr>
+          <td>${esc(String(item.id).slice(0, 8))}</td>
+          <td>${esc(item.employees?.name || 'غير معروف')}<br><small>${esc(item.employees?.code || '')}</small></td>
+          <td>${esc(item.kind || '—')}</td>
+          <td>${esc(item.title || '—')}</td>
+          <td>${escDate(item.created_at)}</td>
+          <td><span class="pill ${statusClass(item.status)}">${esc(item.status || 'قيد المراجعة')}</span></td>
+          <td><button class="btn" type="button" data-view-complaint="${esc(item.id)}">عرض التفاصيل</button></td>
+        </tr>
+      `).join('');
+      empty.hidden = filtered.length > 0;
+    }
+
+    search.addEventListener('input', paintRows);
+    filter.addEventListener('change', paintRows);
+    body.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-view-complaint]');
+      if (!button) return;
+      const item = rows.find(x => String(x.id) === button.dataset.viewComplaint);
+      if (!item) return;
+      details.hidden = false;
+      details.innerHTML = `
+        <h3>تفاصيل الشكوى</h3>
+        <p><b>الموظف:</b> ${esc(item.employees?.name || 'غير معروف')} (${esc(item.employees?.code || '—')})</p>
+        <p><b>النوع:</b> ${esc(item.kind || '—')}</p>
+        <p><b>العنوان:</b> ${esc(item.title || '—')}</p>
+        <p><b>التفاصيل:</b><br>${esc(item.details || '—').replace(/\n/g, '<br>')}</p>
+        <p><b>تاريخ التقديم:</b> ${escDate(item.created_at)}</p>
+        <label>تحديث الحالة
+          <select id="submittedComplaintStatusUpdate" data-status-id="${esc(item.id)}">
+            ${['قيد المراجعة','جارٍ الحل','تم الحل','مرفوضة'].map(st => `<option ${item.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+          </select>
+        </label>
+        <button class="btn primary" id="saveSubmittedComplaintStatus" type="button">حفظ الحالة</button>
+      `;
+      $('#saveSubmittedComplaintStatus').onclick = async () => {
+        const nextStatus = $('#submittedComplaintStatusUpdate').value;
+        const { error: updateError } = await supabase.from('complaints')
+          .update({ status: nextStatus, updated_at: new Date().toISOString() })
+          .eq('id', item.id);
+        if (updateError) {
+          toast('تعذر تحديث الحالة: ' + updateError.message, true);
+          return;
+        }
+        toast('تم تحديث حالة الشكوى.');
+        await renderSubmittedComplaints();
+      };
+      details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    paintRows();
+  }
+
     // لوحة الإدارة
   async function renderAdmin() {
     const [employeesResult, reportsResult, complaintsResult] = await Promise.all([
