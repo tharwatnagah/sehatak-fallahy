@@ -802,69 +802,36 @@
       `).join('');
       empty.hidden = filtered.length > 0;
 
-      // اربط زر الحذف مباشرة بعد رسم الصفوف لضمان استجابة الضغط.
-      body.querySelectorAll('[data-delete-complaint]').forEach((button) => {
-        button.addEventListener('click', async (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!isAdmin()) {
-            toast('حذف الشكاوى متاح لمسؤول النظام فقط.', true);
-            return;
-          }
-          const complaintId = button.dataset.deleteComplaint;
-          const itemToDelete = rows.find(x => String(x.id) === String(complaintId));
-          if (!itemToDelete) {
-            toast('لم يتم العثور على الشكوى. حدّث الصفحة وحاول مرة أخرى.', true);
-            return;
-          }
-          if (!window.confirm(`هل أنت متأكد من حذف الشكوى «${itemToDelete.title || 'بدون عنوان'}»؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
-          button.disabled = true;
-          try {
-            const { data: deletedRows, error: deleteError } = await supabase
-              .from('complaints').delete().eq('id', itemToDelete.id).select('id');
-            if (deleteError) throw deleteError;
-            if (!deletedRows || deletedRows.length === 0) {
-              throw new Error('لم تُحذف أي سجلات. راجع صلاحيات DELETE وسياسات RLS في Supabase.');
-            }
-            toast('تم حذف الشكوى بنجاح.');
-            await renderSubmittedComplaints();
-          } catch (err) {
-            button.disabled = false;
-            toast('تعذر حذف الشكوى: ' + (err?.message || String(err)), true);
-            console.error('Delete complaint failed:', err);
-          }
-        });
-      });
+
     }
 
     search.addEventListener('input', paintRows);
     filter.addEventListener('change', paintRows);
-    body.addEventListener('click', async (event) => {
-      const deleteButton = event.target.closest('[data-delete-complaint]');
-      if (deleteButton) {
-        if (!isAdmin()) {
-          toast('حذف الشكاوى متاح لمسؤول النظام فقط.', true);
-          return;
-        }
-        const complaintId = deleteButton.dataset.deleteComplaint;
-        const itemToDelete = rows.find(x => String(x.id) === complaintId);
-        if (!itemToDelete) return;
-        const confirmed = window.confirm(`هل أنت متأكد من حذف الشكوى «${itemToDelete.title || 'بدون عنوان'}»؟\nلا يمكن التراجع عن هذا الإجراء.`);
-        if (!confirmed) return;
-        deleteButton.disabled = true;
-        const { error: deleteError } = await supabase.from('complaints')
-          .delete()
-          .eq('id', itemToDelete.id);
-        if (deleteError) {
-          deleteButton.disabled = false;
-          toast('تعذر حذف الشكوى: ' + deleteError.message, true);
-          return;
-        }
+    // معالج عام على document حتى يعمل الزر حتى لو أعادت الواجهة رسم الجدول.
+    body.ownerDocument.addEventListener('click', async (event) => {
+      const deleteButton = event.target && event.target.closest ? event.target.closest('[data-delete-complaint]') : null;
+      if (!deleteButton || !body.contains(deleteButton)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!isAdmin()) { toast('حذف الشكاوى متاح لمسؤول النظام فقط.', true); return; }
+      const item = rows.find(x => String(x.id) === String(deleteButton.dataset.deleteComplaint));
+      if (!item) { toast('لم يتم العثور على الشكوى. حدّث الصفحة وحاول مرة أخرى.', true); return; }
+      if (!window.confirm(`هل أنت متأكد من حذف الشكوى «${item.title || 'بدون عنوان'}»؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+      deleteButton.disabled = true;
+      try {
+        const { data: deletedRows, error: deleteError } = await supabase.from('complaints').delete().eq('id', item.id).select('id');
+        if (deleteError) throw deleteError;
+        if (!deletedRows || deletedRows.length === 0) throw new Error('لم يتم حذف السجل. تحقق من صلاحيات DELETE وسياسات RLS في Supabase.');
         toast('تم حذف الشكوى بنجاح.');
         await renderSubmittedComplaints();
-        return;
+      } catch (err) {
+        deleteButton.disabled = false;
+        toast('تعذر حذف الشكوى: ' + (err?.message || String(err)), true);
+        console.error('Delete complaint failed:', err);
       }
+    }, true);
 
+    body.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-view-complaint]');
       if (!button) return;
       const item = rows.find(x => String(x.id) === button.dataset.viewComplaint);
