@@ -138,20 +138,17 @@
   }
 
   function applyPermissions() {
-    document.querySelectorAll('.nav-item').forEach((button) => {
-      const page = button.dataset.page;
-      button.hidden = !hasPermission(page);
-      button.disabled = !hasPermission(page);
+    // الصلاحية المحفوظة لكل حساب هي المرجع النهائي لإظهار صفحات القائمة.
+    // لا نعيد إظهار الصفحات بناءً على الدور (admin/manager)، لأن ذلك
+    // كان يتجاوز اختيار مسؤول النظام عند إغلاق صلاحية صفحة معينة.
+    document.querySelectorAll('.nav-item[data-page]').forEach((button) => {
+      const allowed = hasPermission(button.dataset.page);
+      button.hidden = !allowed;
+      button.disabled = !allowed;
+      button.setAttribute('aria-hidden', String(!allowed));
     });
 
-    document.querySelectorAll('.admin-only').forEach((element) => {
-      element.hidden = !isAdmin();
-    });
-
-    document.querySelectorAll('.manager-only').forEach((element) => {
-      element.hidden = !isManager();
-    });
-
+    // العناصر الإضافية التي ليست أزرار تنقل تعتمد على صلاحية الصفحة المقابلة.
     document.querySelectorAll('.reports-only').forEach((element) => {
       element.hidden = !hasPermission('employeeReports');
     });
