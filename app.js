@@ -571,16 +571,20 @@ async function enablePushNotifications() {
     pageContent.innerHTML = `
       ${heading('الرئيسية', 'ملخص سريع لحسابك')}
 
-      <div class="welcome-card">
-        <div>
-          <h2>مرحباً ${esc(employee.name)}</h2>
-          <p>كود الموظف: ${esc(employee.code)}</p>
-          <small>
-            الفرع: ${esc(employee.branch || '—')}
-            · ${esc(employee.department || '')}
-          </small>
-        </div>
-      </div>
+     <div class="welcome-card">
+  <div>
+    <h2>مرحباً ${esc(employee.name)}</h2>
+    <p>كود الموظف: ${esc(employee.code)}</p>
+    <small>
+      الفرع: ${esc(employee.branch || '—')}
+      · ${esc(employee.department || '')}
+    </small>
+  </div>
+
+  <button type="button" id="enable-push-btn">
+    🔔 تفعيل الإشعارات
+  </button>
+</div>
 
       <div class="quick-grid">
         ${quickPages.map(([page, title, subtitle, style]) => `
