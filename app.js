@@ -604,9 +604,15 @@ async function enablePushNotifications() {
       </div>
     `;
 
-    pageContent.querySelectorAll('[data-go]').forEach((button) => {
-      button.addEventListener('click', () => goToPage(button.dataset.go));
-    });
+pageContent.querySelectorAll('[data-go]').forEach((button) => {
+  button.addEventListener('click', () => goToPage(button.dataset.go));
+});
+
+const pushButton = document.getElementById('enable-push-btn');
+
+if (pushButton) {
+  pushButton.addEventListener('click', enablePushNotifications);
+}
   }
 
   // التقرير اليومي
