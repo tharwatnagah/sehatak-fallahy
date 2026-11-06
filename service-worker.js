@@ -1,12 +1,15 @@
 
-const CACHE_NAME = "sehatak-fallahy-v1";
+const CACHE_NAME = "sehatak-fallahy-v2";
 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
-  "./config.js"
+  "./config.js",
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -15,6 +18,7 @@ self.addEventListener("install", (event) => {
       return cache.addAll(FILES_TO_CACHE);
     })
   );
+
   self.skipWaiting();
 });
 
@@ -26,9 +30,8 @@ self.addEventListener("activate", (event) => {
           .filter((key) => key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -42,6 +45,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    fetch(request).catch(() => caches.match(request))
+    fetch(request).catch(async () => {
+      const cached = await caches.match(request);
+      return cached || (request.mode === "navigate"
+        ? caches.match("./index.html")
+        : Response.error());
+    })
   );
 });
