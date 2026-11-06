@@ -1,0 +1,23 @@
+name: Send app update notifications
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send push notifications
+        run: |
+          curl -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/send-push" \
+            -H "Content-Type: application/json" \
+            -H "x-push-token: ${{ secrets.PUSH_SEND_TOKEN }}" \
+            -d '{
+              "title": "تحديث جديد - صحتك فلاحي",
+              "body": "تم نشر إصدار جديد من التطبيق. افتح التطبيق للاستفادة من التحديثات.",
+              "url": "https://tharwatnagah.github.io/sehatak-fallahy/"
+            }'
