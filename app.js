@@ -268,7 +268,84 @@
     employee = data;
     return true;
   }
+// تحويل مفتاح VAPID العام
+function urlBase64ToUint8Array(value) {
+  const padding = '='.repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
 
+  const raw = window.atob(base64);
+
+  return Uint8Array.from(
+    Array.from(raw, char => char.charCodeAt(0))
+  );
+}
+
+// تفعيل الإشعارات لهذا الموظف
+async function enablePushNotifications() {
+  try {
+    if (!employee) throw new Error('يجب تسجيل الدخول أولاً.');
+
+    if (
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window) ||
+      !('Notification' in window)
+    ) {
+      throw new Error('المتصفح لا يدعم الإشعارات.');
+    }
+
+    if (!cfg.VAPID_PUBLIC_KEY) {
+      throw new Error('مفتاح الإشعارات العام غير موجود.');
+    }
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== 'granted') {
+      throw new Error('لم يتم السماح بالإشعارات.');
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+
+    let subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey:
+          urlBase64ToUint8Array(cfg.VAPID_PUBLIC_KEY)
+      });
+    }
+
+    const { data: existing, error: lookupError } =
+      await supabase
+        .from('push_subscriptions')
+        .select('id')
+        .eq('endpoint', subscription.endpoint)
+        .maybeSingle();
+
+    if (lookupError) throw lookupError;
+
+    if (!existing) {
+      const { error: insertError } = await supabase
+        .from('push_subscriptions')
+        .insert({
+          employee_id: employee.id,
+          endpoint: subscription.endpoint,
+          subscription: subscription.toJSON()
+        });
+
+      if (insertError) throw insertError;
+    }
+
+    toast('تم تفعيل الإشعارات على هذا الجهاز.');
+
+  } catch (error) {
+    console.error('Push notification error:', error);
+    toast('تعذر تفعيل الإشعارات: ' + error.message, true);
+  }
+}
   // تسجيل الدخول
   const loginForm = $('#loginForm');
 
