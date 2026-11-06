@@ -1,4 +1,3 @@
-
 const CACHE_NAME = "sehatak-fallahy-v4";
 
 const FILES_TO_CACHE = [
